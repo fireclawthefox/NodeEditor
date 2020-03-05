@@ -1,4 +1,4 @@
-# Noode Editor
+# Node Editor
 A generic Node Editor
 
 ## Features
