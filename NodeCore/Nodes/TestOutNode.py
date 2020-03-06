@@ -26,4 +26,8 @@ class Node(NodeBase):
         self.addIn("In 1", InSocket)
 
     def logic(self):
+        """Simply write the value in the nodes textfield"""
+        if self.inputList[0].value is None:
+            self.inputList[0].text["text"] = "In 1"
+            return
         self.inputList[0].text["text"] = str(self.inputList[0].getValue())

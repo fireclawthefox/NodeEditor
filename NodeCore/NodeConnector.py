@@ -29,9 +29,12 @@ class NodeConnector:
         self.line.create()
 
     def has(self, socket):
+        """Returns True if one of the sockets this connector connects is
+        the given socket"""
         return socket == self.socketA or socket == self.socketB
 
     def connects(self, a, b):
+        """Returns True if this connector connects socket a and b"""
         return (a == self.socketA or a == self.socketB) and (b == self.socketA or b == self.socketB)
 
     def disconnect(self):

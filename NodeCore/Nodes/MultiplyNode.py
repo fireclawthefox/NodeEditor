@@ -28,5 +28,8 @@ class Node(NodeBase):
         self.addIn("In 2", InSocket)
 
     def logic(self):
-        if self.inputList[0].value is None or self.inputList[1].value is None: return
+        """Multiplies the values given in the into nodes if both are set"""
+        if self.inputList[0].value is None or self.inputList[1].value is None:
+            self.outputList[0].value = float("NaN")
+            return
         self.outputList[0].value = self.inputList[0].value * self.inputList[1].value

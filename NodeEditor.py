@@ -68,6 +68,7 @@ class main(ShowBase):
         self.accept("addNode", self.addNode)
         self.accept("removeNode", self.removeNode)
         self.accept("x", self.removeNode)
+        self.accept("delete", self.removeNode)
 
         self.accept("new", self.newProject)
         self.accept("save", self.saveProject)
@@ -135,6 +136,7 @@ class main(ShowBase):
     # CAMERA SPECIFIC FUNCTIONS
     #
     def setMoveCamera(self, moveCamera):
+        """Start dragging around the editor area/camera"""
         # store the mouse position if weh have a mouse
         if base.mouseWatcherNode.hasMouse():
             x = base.mouseWatcherNode.getMouseX()
@@ -144,6 +146,8 @@ class main(ShowBase):
         self.startCameraMovement = moveCamera
 
     def updateCam(self, task):
+        """Task that will move the editor area/camera around according
+        to mouse movements"""
         # variables to store the mouses current x and y position
         x = 0.0
         y = 0.0
@@ -177,6 +181,7 @@ class main(ShowBase):
         return task.cont
 
     def zoom(self, zoomIn):
+        """Zoom the editor in or out dependent on the value in zoomIn"""
         zoomFactor = 0.05
         maxZoomIn = 2
         maxZoomOut = 0.1
@@ -191,10 +196,12 @@ class main(ShowBase):
         self.updateConnections()
 
     def zoomReset(self):
+        """Set the zoom level back to the default"""
         self.viewNP.setScale(0.5)
         self.updateConnections()
 
     def addNode(self, nodeType=None):
+        """Create a node of the given type"""
         self.deselectAll()
         if nodeType is None:
             node = NodeBase("Test", self.viewNP)
@@ -208,16 +215,24 @@ class main(ShowBase):
         self.nodeList.append(node)
 
     def removeNode(self):
+        """Remove all selected nodes"""
         for node in self.selectedNodes:
             for connector in self.connections[:]:
                 if connector.socketA.node is node or connector.socketB.node is node:
                     connector.disconnect()
                     self.connections.remove(connector)
+                    # Update logic of the disconnected existing socket node
+                    if connector.socketA.node is node:
+                        self.updateSocketNodeLogic(connector.socketB)
+                    else:
+                        self.updateSocketNodeLogic(connector.socketA)
             self.nodeList.remove(node)
             node.destroy()
             del node
 
     def removeAllNodes(self):
+        """Remove all nodes and connections that are currently in the editor"""
+
         # Remove all connections
         for connector in self.connections[:]:
             connector.disconnect()
@@ -230,31 +245,41 @@ class main(ShowBase):
             del node
 
     def copyNodes(self):
+        """Copy all selected nodes (light copies) and start dragging
+        with the mouse cursor"""
+
+        # create shallow copies of all nodes
         newNodeList = []
         for node in self.selectedNodes:
             newNode = type(node)(self.viewNP)
-            #newNode = copy.deepcopy(node)
-            #newNode = testValueNode.Node(self.viewNP)
             newNode.show()
             newNode.frame.setPos(node.frame.getPos())
             newNodeList.append(newNode)
             self.nodeList.append(newNode)
 
+        # deselect all nodes
         self.deselectAll()
+
+        # now only select the newly created ones
         for node in newNodeList:
             node.select(True)
             self.selectedNodes.append(node)
+
+        # start the dragging of the new nodes
         dragNode = newNodeList[0]
         dragNode.accept("mouse1-up", dragNode._dragStop)
         dragNode._dragStart(dragNode.frame, None)
 
     def startLineDrawing(self, startPos):
+        """Start a task that will draw a line from the given start
+        position to the cursor"""
         self.line = LineNodePath(render2d, thickness=2, colorVec=(0.8,0.8,0.8,1))
         self.line.moveTo(startPos)
         t = self.taskMgr.add(self.drawLineTask, "drawLineTask")
         t.startPos = startPos
 
     def drawLineTask(self, task):
+        """Draws a line from a given start position to the cursor"""
         mwn = base.mouseWatcherNode
         if mwn.hasMouse():
             pos = Point3(mwn.getMouse()[0], 0, mwn.getMouse()[1])
@@ -266,22 +291,32 @@ class main(ShowBase):
         return task.cont
 
     def stopLineDrawing(self):
+        """Stop the task that draws a line to the cursor"""
         taskMgr.remove("drawLineTask")
         if self.line is not None:
             self.line.reset()
             self.line = None
 
     def setStartPlug(self, socket):
+        """Set the start socket for a possible connection"""
         self.startSocket = socket
 
     def setEndPlug(self, socket):
+        """Set the end socket for a possible connection"""
         self.endSocket = socket
 
     def cancelPlug(self):
+        """A possible connection between two sockets has been canceled"""
         self.startSocket = None
         self.endSocket = None
 
     def connectPlugs(self):
+        """Create a line connection between the sockets set in
+        self.startSocket and self.endSocket if a connection is possible
+
+        This function will not allow a connection with only one socket
+        set, if both sockets are of the same type or on the same node."""
+
         # only do something if we actually have two sockets
         if self.startSocket is None or self.endSocket is None:
             return
@@ -289,12 +324,15 @@ class main(ShowBase):
         # check if the "IN" socket has no connections otherwise we can't connect
         if (self.startSocket.type == INSOCKET and self.startSocket.connected) \
         or (self.endSocket.type == INSOCKET and self.endSocket.connected):
+            # check if this is our connection. If so, we want to disconnect
             for connector in self.connections[:]:
                 if connector.connects(self.startSocket, self.endSocket):
                     connector.disconnect()
                     self.connections.remove(connector)
-                    outSocketNode = self.startSocket.node if self.startSocket.type is OUTSOCKET else self.endSocket.node
-                    self.updateConnectedNodes(outSocketNode)
+
+                    # Update logic of the sockets' nodes
+                    self.updateDisconnectedNodesLogic(self.startSocket, self.endSocket)
+
                     self.startSocket = None
                     self.endSocket = None
                     return
@@ -314,7 +352,34 @@ class main(ShowBase):
             self.startSocket = None
             self.endSocket = None
 
+    def updateDisconnectedNodesLogic(self, socketA, socketB):
+        """
+        Updates the logic of the nodes of socket A and socket B.
+        The respective input plug type sockets value will be set to None.
+        """
+        # Update logic of out socket node
+        outSocketNode = self.socketA.node if self.socketA.type is OUTSOCKET else self.socketB.node
+        outSocketNode.logic()
+        self.updateConnectedNodes(outSocketNode)
+
+        # Update logic of in socket node
+        inSocketNode = self.socketA.node if self.socketA.type is INSOCKET else self.socketB.node
+        inSocket = self.socketA if self.socketA.type is INSOCKET else self.socketB
+        inSocket.value = None
+        inSocketNode.logic()
+        self.updateConnectedNodes(inSocketNode)
+
+    def updateSocketNodeLogic(self, socket):
+        """Update the logic of the given node and all nodes connected
+        down the given"""
+        if socket.type is INSOCKET:
+            socket.value = None
+        socket.node.logic()
+        self.updateConnectedNodes(socket.node)
+
     def updateConnectedNodes(self, leaveNode):
+        """Update logic of all nodes connected the leave nodes
+        out sockets recursively down to the last connected node."""
         for connector in self.connections:
             for outSocket in leaveNode.outputList:
                 if connector.socketA is outSocket:
@@ -329,12 +394,16 @@ class main(ShowBase):
                     self.updateConnectedNodes(connector.socketA.node)
 
     def setDraggedNode(self, node):
+        """This will set the node that is currently dragged around
+        as well as update other selected nodes which will be moved
+        in addition to the main dragged node"""
         self.draggedNode = node
         self.tempNodePositions = {}
         for node in self.selectedNodes:
             self.tempNodePositions[node] = node.frame.getPos(render2d)
 
     def updateNodeMove(self, mouseA, mouseB):
+        """Will be called as long as a node is beeing dragged around"""
         for node in self.selectedNodes:
             if node is not self.draggedNode and node in self.tempNodePositions.keys():
                 editVec = Vec3(self.tempNodePositions[node] - mouseA)
@@ -343,15 +412,20 @@ class main(ShowBase):
         self.updateConnections()
 
     def updateNodeStop(self, node=None):
+        """Will be called when a node dragging stopped"""
         self.draggedNode = None
         self.tempNodePositions = {}
         self.updateConnections()
 
     def updateConnections(self, args=None):
+        """Update line positions of all connections"""
         for connector in self.connections:
             connector.update()
 
     def windowEventHandler(self, window=None):
+        """Custom handler for window events.
+        We mostly use this for resizing."""
+
         # call showBase windowEvent which would otherwise get overridden and breaking the app
         self.windowEvent(window)
 
@@ -368,21 +442,32 @@ class main(ShowBase):
             self.menuBar.resizeFrame()
 
     def selectNode(self, node, selected, addToSelection=False, deselectOthersIfUnselected=False):
+        """Select or deselect the given node according to the boolean value in selected.
+        If addToSelection is set, other nodes currently selected are not deselected.
+        If deselectOthersIfUnselected is set, other nodes will be deselected if the given node
+        is not yet selected"""
+        # check if we want to add to the current selection
         if not addToSelection:
             if deselectOthersIfUnselected:
                 if not node.selected:
                     self.deselectAll(node)
             else:
                 self.deselectAll(node)
+
+        # check if we want to select or deselect the node
         if selected:
+            # Select
+            # Only select if it's not already selected
             if node not in self.selectedNodes:
                 node.select(True)
                 self.selectedNodes.append(node)
         else:
+            # Deselect
             node.select(False)
             self.selectedNodes.remove(node)
 
     def deselectAll(self, excludedNode=None):
+        """Deselect all nodes"""
         for node in self.nodeList:
             if node is excludedNode: continue
             node.select(False)

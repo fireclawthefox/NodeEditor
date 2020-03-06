@@ -107,6 +107,9 @@ class MenuBar(DirectObject):
             "Addition":"AddNode",
             "Divide":"DivideNode",
             "Multiply":"MultiplyNode",
+            "Boolean Value":"BoolNode",
+            "Boolean And":"BoolAnd",
+            "Boolean Or":"BoolOr",
             "Simple Output":"TestOutNode"
         }
 
