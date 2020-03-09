@@ -1,5 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+__author__ = "Fireclaw the Fox"
+__license__ = """
+Simplified BSD (BSD 2-Clause) License.
+See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
+"""
+
 
 import sys, os, time
 import configparser
@@ -28,6 +34,8 @@ from direct.directtools.DirectGeometry import LineNodePath
 from direct.gui import DirectGuiGlobals as DGG
 
 from MenuBar import MenuBar
+
+from SaveScripts.SaveJSON import Save
 
 from NodeCore.NodeBase import NodeBase
 from NodeCore.Nodes import *
@@ -100,7 +108,6 @@ class main(ShowBase):
         self.boxCardMaker.setColor(1,0,0,0.25)
         self.box = None
 
-
         self.screenSize = base.getSize()
         self.accept("window-event", self.windowEventHandler)
 
@@ -127,10 +134,10 @@ class main(ShowBase):
         self.selectedNodes = []
 
     def saveProject(self):
-        pass
+        Save(self.nodeList, self.connections)
 
     def loadProject(self):
-        pass
+        Load(self)
 
     #
     # CAMERA SPECIFIC FUNCTIONS
@@ -213,6 +220,7 @@ class main(ShowBase):
             node = eval(nodeType + ".Node")(self.viewNP)
         node.create()
         self.nodeList.append(node)
+        return node
 
     def removeNode(self):
         """Remove all selected nodes"""
@@ -310,12 +318,17 @@ class main(ShowBase):
         self.startSocket = None
         self.endSocket = None
 
-    def connectPlugs(self):
+    def connectPlugs(self, startSocket=None, endSocket=None):
         """Create a line connection between the sockets set in
         self.startSocket and self.endSocket if a connection is possible
 
         This function will not allow a connection with only one socket
         set, if both sockets are of the same type or on the same node."""
+
+        if startSocket is not None:
+            self.startSocket = startSocket
+        if endSocket is not None:
+            self.endSocket = endSocket
 
         # only do something if we actually have two sockets
         if self.startSocket is None or self.endSocket is None:
@@ -351,6 +364,7 @@ class main(ShowBase):
             self.updateConnectedNodes(outSocketNode)
             self.startSocket = None
             self.endSocket = None
+            return connector
 
     def updateDisconnectedNodesLogic(self, socketA, socketB):
         """

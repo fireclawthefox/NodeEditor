@@ -5,6 +5,8 @@ __license__ = """
 Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
+from uuid import uuid4
+
 from direct.showbase.DirectObject import DirectObject
 from NodeCore.Sockets.OutSocket import OutSocket
 from NodeCore.Sockets.InSocket import InSocket
@@ -27,6 +29,7 @@ class NodeBase(DirectObject):
         self.right = 0.5
         self.left = -0.5
         self.name = name
+        self.nodeID = uuid4()
         self.inputList = []
         self.outputList = []
         self.selected = False

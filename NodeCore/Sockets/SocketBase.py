@@ -5,6 +5,8 @@ __license__ = """
 Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
+from uuid import uuid4
+
 from direct.gui.DirectFrame import DirectFrame
 from direct.gui import DirectGuiGlobals as DGG
 
@@ -13,6 +15,7 @@ INSOCKET = 1
 
 class SocketBase:
     def __init__(self, node, name):
+        self.socketID = uuid4()
         self.node = node
         self.name = name
         self.height = 0.2
@@ -21,6 +24,7 @@ class SocketBase:
         self.connected = False
 
     def getValue(self):
+        """Returns a string serializable value stored in this node"""
         return self.value
 
     def setValue(self, value):

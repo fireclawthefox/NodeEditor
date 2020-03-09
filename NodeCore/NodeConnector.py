@@ -5,6 +5,7 @@ __license__ = """
 Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
+from uuid import uuid4
 
 from direct.showbase import ShowBaseGlobal
 from direct.gui import DirectGuiGlobals as DGG
@@ -14,6 +15,7 @@ from direct.directtools.DirectGeometry import LineNodePath
 
 class NodeConnector:
     def __init__(self, socketA, socketB):
+        self.connectorID = uuid4()
         self.socketA = socketA
         self.socketB = socketB
         self.line = LineNodePath(ShowBaseGlobal.aspect2d, thickness=2, colorVec=(0.8,0.8,0.8,1))
