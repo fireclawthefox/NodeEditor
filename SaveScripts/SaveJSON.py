@@ -8,7 +8,6 @@ See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 
 import os
 import json
-import logging
 
 from direct.gui import DirectGuiGlobals as DGG
 from direct.gui.DirectFrame import DirectFrame

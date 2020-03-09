@@ -16,10 +16,10 @@ class JSONTools:
             jsonElements["Nodes"].append(
                 {
                     "id":str(node.nodeID),
-                    "type":str(type(node)),
+                    "type":node.__module__,
                     "pos":str(node.frame.getPos()),
                     "inSockets":self.__getSockets(node.inputList),
-                    "ouSockets":self.__getSockets(node.outputList)
+                    "outSockets":self.__getSockets(node.outputList)
                 }
             )
 
@@ -38,9 +38,16 @@ class JSONTools:
     def __getSockets(self, socketList):
         sockets = []
         for socket in socketList:
-            sockets.append({
-                "id":str(socket.socketID)),
-                if not socket.connected: "value":str(socket.getValue())
-            }
+            if not socket.connected:
+                # only store values entered by the user, not by other
+                # sockets as they should be recalculated on load
+                sockets.append({
+                    "id":str(socket.socketID),
+                    "value":str(socket.getValue())
+                })
+            else:
+                sockets.append({
+                    "id":str(socket.socketID),
+                })
         return sockets
 

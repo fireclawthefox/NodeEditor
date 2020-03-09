@@ -89,7 +89,7 @@ class MenuBar(DirectObject):
         self.tools = DirectOptionMenu(
             text_fg=(1,1,1,1),
             text_scale=0.8,
-            items=["Delete Node"],
+            items=["Delete Nodes", "Copy Nodes", "Refresh"],
             pos=(x, 0, -5),
             frameSize=(0,65/21,-7/21,17/21),
             frameColor=color,
@@ -155,8 +155,13 @@ class MenuBar(DirectObject):
         self.file["text"] = "File"
 
     def toolbarToolsCommand(self, selection):
-        if selection == "Delete Node":
+        if selection == "Delete Nodes":
             base.messenger.send("removeNode")
+        elif selection == "Copy Nodes":
+            taskMgr.doMethodLater(0.2, base.messenger.send, "delayedCopyFromMenu", extraArgs=["copyNodes"])
+            #base.messenger.send("copyNodes")
+        elif selection == "Refresh":
+            base.messenger.send("refreshNodes")
         #elif selection == "Options":
         #    base.messenger.send("showSettings")
         #elif selection == "Help":

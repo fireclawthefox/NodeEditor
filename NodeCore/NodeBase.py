@@ -48,6 +48,9 @@ class NodeBase(DirectObject):
         self.setupBind()
         self.hide()
 
+        self.setPos = self.frame.setPos
+        self.getPos = self.frame.getPos
+
     def addIn(self, name, socketType):
         """Add a new input socket of the given socket type"""
         inSocket = socketType(self, name)
@@ -57,6 +60,17 @@ class NodeBase(DirectObject):
         """Add a new output socket"""
         outSocket = OutSocket(self, name)
         self.outputList.append(outSocket)
+
+    def isLeaveNode(self):
+        """Returns true if this is a leave node.
+        Leave nodes do not have any input connections. Either if no
+        input sockets are defined at all or none of the sockets is
+        connected."""
+
+        # check if we have any input sockets and if so if any of them is connected
+        for inSocket in self.inputList:
+            if inSocket.connected: return False
+        return True
 
     def logic(self):
         """Run the logic of this node, process all in and output data.

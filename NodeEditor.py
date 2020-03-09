@@ -36,7 +36,9 @@ from direct.gui import DirectGuiGlobals as DGG
 from MenuBar import MenuBar
 
 from SaveScripts.SaveJSON import Save
+from LoadScripts.LoadJSON import Load
 
+import NodeCore
 from NodeCore.NodeBase import NodeBase
 from NodeCore.Nodes import *
 from NodeCore.Sockets.SocketBase import OUTSOCKET, INSOCKET
@@ -71,7 +73,12 @@ class main(ShowBase):
         self.accept("dragNodeStop", self.updateNodeStop)
         self.accept("updateConnectedNodes", self.updateConnectedNodes)
         self.accept("selectNode", self.selectNode)
+
         self.accept("shift-d", self.copyNodes)
+        self.accept("copyNodes", self.copyNodes)
+
+        self.accept("ctlr-r", self.updateAllLeaveNodes)
+        self.accept("refreshNodes", self.updateAllLeaveNodes)
 
         self.accept("addNode", self.addNode)
         self.accept("removeNode", self.removeNode)
@@ -105,7 +112,7 @@ class main(ShowBase):
         self.lastPos = LPoint2f(0,0)
         # variables for the to be drawn box
         self.boxCardMaker = CardMaker("SelectionBox")
-        self.boxCardMaker.setColor(1,0,0,0.25)
+        self.boxCardMaker.setColor(1,1,1,0.25)
         self.box = None
 
         self.screenSize = base.getSize()
@@ -119,6 +126,9 @@ class main(ShowBase):
         # add the cameras update task so it will be updated every frame
         self.taskMgr.add(self.updateCam, "task_camActualisation", priority=-4)
 
+    # ------------------------------------------------------------------
+    # PROJECT FUNCTIONS
+    # ------------------------------------------------------------------
     def newProject(self):
         self.cleanup()
 
@@ -137,11 +147,12 @@ class main(ShowBase):
         Save(self.nodeList, self.connections)
 
     def loadProject(self):
+        self.cleanup()
         Load(self)
 
-    #
+    # ------------------------------------------------------------------
     # CAMERA SPECIFIC FUNCTIONS
-    #
+    # ------------------------------------------------------------------
     def setMoveCamera(self, moveCamera):
         """Start dragging around the editor area/camera"""
         # store the mouse position if weh have a mouse
@@ -207,6 +218,9 @@ class main(ShowBase):
         self.viewNP.setScale(0.5)
         self.updateConnections()
 
+    # ------------------------------------------------------------------
+    # NODE MANAGER PART
+    # ------------------------------------------------------------------
     def addNode(self, nodeType=None):
         """Create a node of the given type"""
         self.deselectAll()
@@ -252,9 +266,47 @@ class main(ShowBase):
             node.destroy()
             del node
 
+    def selectNode(self, node, selected, addToSelection=False, deselectOthersIfUnselected=False):
+        """Select or deselect the given node according to the boolean value in selected.
+        If addToSelection is set, other nodes currently selected are not deselected.
+        If deselectOthersIfUnselected is set, other nodes will be deselected if the given node
+        is not yet selected"""
+        # check if we want to add to the current selection
+        if not addToSelection:
+            if deselectOthersIfUnselected:
+                if not node.selected:
+                    self.deselectAll(node)
+            else:
+                self.deselectAll(node)
+
+        # check if we want to select or deselect the node
+        if selected:
+            # Select
+            # Only select if it's not already selected
+            if node not in self.selectedNodes:
+                node.select(True)
+                self.selectedNodes.append(node)
+        else:
+            # Deselect
+            node.select(False)
+            self.selectedNodes.remove(node)
+
+    def deselectAll(self, excludedNode=None):
+        """Deselect all nodes"""
+        for node in self.nodeList:
+            if node is excludedNode: continue
+            node.select(False)
+        self.selectedNodes = []
+
     def copyNodes(self):
         """Copy all selected nodes (light copies) and start dragging
         with the mouse cursor"""
+
+        if self.selectedNodes == []: return
+
+        # a mapping of old to new nodes
+        nodeMapping = {}
+        socketMapping = {}
 
         # create shallow copies of all nodes
         newNodeList = []
@@ -264,6 +316,27 @@ class main(ShowBase):
             newNode.frame.setPos(node.frame.getPos())
             newNodeList.append(newNode)
             self.nodeList.append(newNode)
+            nodeMapping[node] = newNode
+            for i in range(len(node.inputList)):
+                socketMapping[node.inputList[i]] = newNode.inputList[i]
+            for i in range(len(node.outputList)):
+                socketMapping[node.outputList[i]] = newNode.outputList[i]
+
+        # get connections of to be copied nodes
+        for connector in self.connections:
+            if connector.socketA.node in self.selectedNodes and connector.socketB.node in self.selectedNodes:
+                # we have a connection of one of the to be copied nodes
+                newNodeA = nodeMapping[connector.socketA.node]
+                newNodeB = nodeMapping[connector.socketB.node]
+
+                newSocketA = socketMapping[connector.socketA]
+                newSocketB = socketMapping[connector.socketB]
+
+                self.connectPlugs()
+                connector = NodeConnector(newSocketA, newSocketB)
+                self.connections.append(connector)
+                newSocketA.setConnected(True)
+                newSocketB.setConnected(True)
 
         # deselect all nodes
         self.deselectAll()
@@ -278,32 +351,20 @@ class main(ShowBase):
         dragNode.accept("mouse1-up", dragNode._dragStop)
         dragNode._dragStart(dragNode.frame, None)
 
-    def startLineDrawing(self, startPos):
-        """Start a task that will draw a line from the given start
-        position to the cursor"""
-        self.line = LineNodePath(render2d, thickness=2, colorVec=(0.8,0.8,0.8,1))
-        self.line.moveTo(startPos)
-        t = self.taskMgr.add(self.drawLineTask, "drawLineTask")
-        t.startPos = startPos
+        self.updateAllLeaveNodes()
 
-    def drawLineTask(self, task):
-        """Draws a line from a given start position to the cursor"""
-        mwn = base.mouseWatcherNode
-        if mwn.hasMouse():
-            pos = Point3(mwn.getMouse()[0], 0, mwn.getMouse()[1])
-
-            self.line.reset()
-            self.line.moveTo(task.startPos)
-            self.line.drawTo(pos)
-            self.line.create()
-        return task.cont
-
-    def stopLineDrawing(self):
-        """Stop the task that draws a line to the cursor"""
-        taskMgr.remove("drawLineTask")
-        if self.line is not None:
-            self.line.reset()
-            self.line = None
+    def createNode(self, nodeType):
+        """Creates a node of the given type and returns it. Returns None
+        if the node could not be created.
+        nodeType can be either a node class type or a string representing such a type"""
+        if isinstance(nodeType, str): nodeType = eval(nodeType + ".Node")
+        try:
+            node = nodeType(self.viewNP)
+            self.nodeList.append(node)
+            return node
+        except Exception as e:
+            print(e)
+            return None
 
     def setStartPlug(self, socket):
         """Set the start socket for a possible connection"""
@@ -366,19 +427,29 @@ class main(ShowBase):
             self.endSocket = None
             return connector
 
+    def updateAllLeaveNodes(self):
+        leaves = []
+        for node in self.nodeList:
+            if node.isLeaveNode():
+                leaves.append(node)
+
+        for leave in leaves:
+            leave.logic()
+            self.updateConnectedNodes(leave)
+
     def updateDisconnectedNodesLogic(self, socketA, socketB):
         """
         Updates the logic of the nodes of socket A and socket B.
         The respective input plug type sockets value will be set to None.
         """
         # Update logic of out socket node
-        outSocketNode = self.socketA.node if self.socketA.type is OUTSOCKET else self.socketB.node
+        outSocketNode = socketA.node if socketA.type is OUTSOCKET else socketB.node
         outSocketNode.logic()
         self.updateConnectedNodes(outSocketNode)
 
         # Update logic of in socket node
-        inSocketNode = self.socketA.node if self.socketA.type is INSOCKET else self.socketB.node
-        inSocket = self.socketA if self.socketA.type is INSOCKET else self.socketB
+        inSocketNode = socketA.node if socketA.type is INSOCKET else socketB.node
+        inSocket = socketA if socketA.type is INSOCKET else socketB
         inSocket.value = None
         inSocketNode.logic()
         self.updateConnectedNodes(inSocketNode)
@@ -392,6 +463,10 @@ class main(ShowBase):
         self.updateConnectedNodes(socket.node)
 
     def updateConnectedNodes(self, leaveNode):
+        self.updatedSockets = []
+        self.__updateConnectedNodes(leaveNode)
+
+    def __updateConnectedNodes(self, leaveNode):
         """Update logic of all nodes connected the leave nodes
         out sockets recursively down to the last connected node."""
         for connector in self.connections:
@@ -400,13 +475,51 @@ class main(ShowBase):
                     connector.socketA.node.logic()
                     connector.socketB.setValue(connector.socketA.getValue())
                     connector.socketB.node.logic()
-                    self.updateConnectedNodes(connector.socketB.node)
+                    self.__updateConnectedNodes(connector.socketB.node)
                 elif connector.socketB is outSocket:
                     connector.socketB.node.logic()
                     connector.socketA.setValue(connector.socketB.getValue())
                     connector.socketA.node.logic()
-                    self.updateConnectedNodes(connector.socketA.node)
+                    self.__updateConnectedNodes(connector.socketA.node)
 
+    # ------------------------------------------------------------------
+    # LINE AND CONNECTION MANAGEMENT
+    # ------------------------------------------------------------------
+    def startLineDrawing(self, startPos):
+        """Start a task that will draw a line from the given start
+        position to the cursor"""
+        self.line = LineNodePath(render2d, thickness=2, colorVec=(0.8,0.8,0.8,1))
+        self.line.moveTo(startPos)
+        t = self.taskMgr.add(self.drawLineTask, "drawLineTask")
+        t.startPos = startPos
+
+    def drawLineTask(self, task):
+        """Draws a line from a given start position to the cursor"""
+        mwn = base.mouseWatcherNode
+        if mwn.hasMouse():
+            pos = Point3(mwn.getMouse()[0], 0, mwn.getMouse()[1])
+
+            self.line.reset()
+            self.line.moveTo(task.startPos)
+            self.line.drawTo(pos)
+            self.line.create()
+        return task.cont
+
+    def stopLineDrawing(self):
+        """Stop the task that draws a line to the cursor"""
+        taskMgr.remove("drawLineTask")
+        if self.line is not None:
+            self.line.reset()
+            self.line = None
+
+    def updateConnections(self, args=None):
+        """Update line positions of all connections"""
+        for connector in self.connections:
+            connector.update()
+
+    # ------------------------------------------------------------------
+    # EDITOR NODE DRAGGING UPDATE
+    # ------------------------------------------------------------------
     def setDraggedNode(self, node):
         """This will set the node that is currently dragged around
         as well as update other selected nodes which will be moved
@@ -431,11 +544,9 @@ class main(ShowBase):
         self.tempNodePositions = {}
         self.updateConnections()
 
-    def updateConnections(self, args=None):
-        """Update line positions of all connections"""
-        for connector in self.connections:
-            connector.update()
-
+    # ------------------------------------------------------------------
+    # BASIC WINDOW HANDLING
+    # ------------------------------------------------------------------
     def windowEventHandler(self, window=None):
         """Custom handler for window events.
         We mostly use this for resizing."""
@@ -455,38 +566,9 @@ class main(ShowBase):
             # Resize all editor frames
             self.menuBar.resizeFrame()
 
-    def selectNode(self, node, selected, addToSelection=False, deselectOthersIfUnselected=False):
-        """Select or deselect the given node according to the boolean value in selected.
-        If addToSelection is set, other nodes currently selected are not deselected.
-        If deselectOthersIfUnselected is set, other nodes will be deselected if the given node
-        is not yet selected"""
-        # check if we want to add to the current selection
-        if not addToSelection:
-            if deselectOthersIfUnselected:
-                if not node.selected:
-                    self.deselectAll(node)
-            else:
-                self.deselectAll(node)
-
-        # check if we want to select or deselect the node
-        if selected:
-            # Select
-            # Only select if it's not already selected
-            if node not in self.selectedNodes:
-                node.select(True)
-                self.selectedNodes.append(node)
-        else:
-            # Deselect
-            node.select(False)
-            self.selectedNodes.remove(node)
-
-    def deselectAll(self, excludedNode=None):
-        """Deselect all nodes"""
-        for node in self.nodeList:
-            if node is excludedNode: continue
-            node.select(False)
-        self.selectedNodes = []
-
+    # ------------------------------------------------------------------
+    # SELECTION BOX
+    # ------------------------------------------------------------------
     def startBoxDraw(self):
         """Start drawing the box"""
         if self.mouseWatcherNode.hasMouse():
