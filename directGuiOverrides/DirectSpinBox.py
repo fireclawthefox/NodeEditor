@@ -333,7 +333,7 @@ class DirectSpinBox(DirectFrame):
         self['value'] = value
 
         if self.__valueChangeCallback:
-            self.__valueChangeCallback()
+            self.__valueChangeCallback(*([self['value']] + self['extraArgs']))
 
         return True
 

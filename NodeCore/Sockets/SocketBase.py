@@ -57,7 +57,7 @@ class SocketBase:
         base.messenger.send("stopLineDrawing")
         taskMgr.doMethodLater(0.2, base.messenger.send, "delayedPlugRelease", extraArgs=["cancelPlug"])
 
-    def updateConnectedNodes(self, args=None):
+    def updateConnectedNodes(self, *args):
         base.messenger.send("updateConnectedNodes", [self.node])
 
     def setConnected(self, connected):
