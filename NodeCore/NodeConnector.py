@@ -6,11 +6,7 @@ Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
 from uuid import uuid4
-
 from direct.showbase import ShowBaseGlobal
-from direct.gui import DirectGuiGlobals as DGG
-
-from direct.gui.DirectFrame import DirectFrame
 from direct.directtools.DirectGeometry import LineNodePath
 
 class NodeConnector:

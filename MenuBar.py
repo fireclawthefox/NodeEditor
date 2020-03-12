@@ -6,20 +6,14 @@ Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
 
-from panda3d.core import TransparencyAttrib, ConfigVariableBool
-
-from direct.showbase.DirectObject import DirectObject
-
 from direct.gui import DirectGuiGlobals as DGG
 DGG.BELOW = "below"
 
-from direct.gui.DirectButton import DirectButton
 from direct.gui.DirectFrame import DirectFrame
-from direct.gui.DirectCheckBox import DirectCheckBox
 #from direct.gui.DirectOptionMenu import DirectOptionMenu
 from directGuiOverrides.DirectOptionMenu import DirectOptionMenu
 
-class MenuBar(DirectObject):
+class MenuBar():
     def __init__(self):
         screenWidthPx = base.getSize()[0]
 

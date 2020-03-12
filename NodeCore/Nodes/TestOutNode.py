@@ -6,7 +6,7 @@ Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
 
-from NodeCore.NodeBase import NodeBase
+from NodeCore.Nodes.NodeBase import NodeBase
 from NodeCore.Sockets.InSocket import InSocket
 from direct.gui import DirectGuiGlobals as DGG
 
