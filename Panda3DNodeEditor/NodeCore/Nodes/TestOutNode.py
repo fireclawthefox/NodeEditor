@@ -19,8 +19,8 @@ from panda3d.core import (
 
 from DirectGuiExtension import DirectGuiHelper as DGH
 
-from NodeEditor.NodeCore.Nodes.NodeBase import NodeBase
-from NodeEditor.NodeCore.Sockets.InSocket import InSocket
+from Panda3DNodeEditor.NodeCore.Nodes.NodeBase import NodeBase
+from Panda3DNodeEditor.NodeCore.Sockets.InSocket import InSocket
 
 class Node(NodeBase):
     def __init__(self, parent):

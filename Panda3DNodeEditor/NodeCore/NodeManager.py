@@ -6,11 +6,14 @@ Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
 
-from NodeEditor import NodeCore
-from NodeEditor.NodeCore.Nodes import *
-from NodeEditor.NodeCore.Nodes.NodeBase import NodeBase
-from NodeEditor.NodeCore.Sockets.SocketBase import OUTSOCKET, INSOCKET
-from NodeEditor.NodeCore.NodeConnector import NodeConnector
+import logging
+
+import Panda3DNodeEditor
+from Panda3DNodeEditor import NodeCore
+from Panda3DNodeEditor.NodeCore.Nodes import *
+from Panda3DNodeEditor.NodeCore.Nodes.NodeBase import NodeBase
+from Panda3DNodeEditor.NodeCore.Sockets.SocketBase import OUTSOCKET, INSOCKET
+from Panda3DNodeEditor.NodeCore.NodeConnector import NodeConnector
 
 class NodeManager:
     def __init__(self, nodeViewNP=None, customNodeMap=None):
@@ -52,8 +55,12 @@ class NodeManager:
         nodeType can be either a node class type or a string representing such a type"""
         if isinstance(nodeType, str):
             try:
+                print("try load node")
+                print(nodeType + ".Node")
                 nodeType = eval(nodeType + ".Node")
+                print(nodeType)
             except:
+                logging.error("loading failed", exc_info=True)
                 nodeClassName = nodeType.split(".")[-1]
                 # try for the custom nodes
                 for entry, customNodeType in self.customNodeMap.items():
@@ -71,7 +78,7 @@ class NodeManager:
             self.nodeList.append(node)
             return node
         except Exception as e:
-            logger.error("Failed to load node type", exc_info=True)
+            logging.error("Failed to load node type", exc_info=True)
             return None
 
     def addNode(self, nodeType):

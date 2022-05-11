@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="NodeEditor",
+    name="Panda3DNodeEditor",
     version="22.05",
     author="Fireclaw",
     author_email="fireclawthefox@gmail.com",

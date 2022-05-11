@@ -20,10 +20,10 @@ from panda3d.core import (
 from direct.showbase.DirectObject import DirectObject
 from direct.directtools.DirectGeometry import LineNodePath
 
-from NodeEditor.SaveScripts.SaveJSON import Save
-from NodeEditor.LoadScripts.LoadJSON import Load
-from NodeEditor.GUI.MainView import MainView
-from NodeEditor.NodeCore.NodeManager import NodeManager
+from Panda3DNodeEditor.SaveScripts.SaveJSON import Save
+from Panda3DNodeEditor.LoadScripts.LoadJSON import Load
+from Panda3DNodeEditor.GUI.MainView import MainView
+from Panda3DNodeEditor.NodeCore.NodeManager import NodeManager
 
 class NodeEditor(DirectObject):
     def __init__(self, parent, customNodeMap={}, customExporterMap={}):

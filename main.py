@@ -7,7 +7,7 @@ from panda3d.core import (
     WindowProperties,
     AntialiasAttrib)
 from editorLogHandler import setupLog
-from NodeEditor.NodeEditor import NodeEditor
+from Panda3DNodeEditor.NodeEditor import NodeEditor
 
 loadPrcFileData(
     "",

@@ -16,7 +16,7 @@ from direct.gui.DirectFrame import DirectFrame
 from direct.gui.DirectDialog import YesNoDialog
 
 from DirectFolderBrowser.DirectFolderBrowser import DirectFolderBrowser
-from NodeEditor.Tools.JSONTools import JSONTools
+from Panda3DNodeEditor.Tools.JSONTools import JSONTools
 
 class Save:
     def __init__(self, nodes, connections, exceptionSave=False):

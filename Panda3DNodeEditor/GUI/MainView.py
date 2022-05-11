@@ -6,7 +6,7 @@ from direct.gui.DirectFrame import DirectFrame
 from DirectGuiExtension.DirectBoxSizer import DirectBoxSizer
 from DirectGuiExtension.DirectAutoSizer import DirectAutoSizer
 
-from NodeEditor.GUI.MenuBar import MenuBar
+from Panda3DNodeEditor.GUI.MenuBar import MenuBar
 
 
 class MainView():
