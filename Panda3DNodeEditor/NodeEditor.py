@@ -86,6 +86,7 @@ class NodeEditor(DirectObject):
         taskMgr.add(self.updateCam, "NodeEditor_task_camActualisation", priority=-4)
 
         self.viewNP.show()
+        self.nodeMgr.showConnections()
 
     def disable_editor(self):
         """
@@ -95,6 +96,7 @@ class NodeEditor(DirectObject):
         taskMgr.remove("NodeEditor_task_camActualisation")
 
         self.viewNP.hide()
+        self.nodeMgr.hideConnections()
 
     def do_exception_save(self):
         """

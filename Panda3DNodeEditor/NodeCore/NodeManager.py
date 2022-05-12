@@ -278,6 +278,14 @@ class NodeManager:
             self.endSocket = None
             return connector
 
+    def showConnections(self):
+        for connector in self.connections:
+            connector.show()
+
+    def hideConnections(self):
+        for connector in self.connections:
+            connector.hide()
+
     def updateAllLeaveNodes(self):
         leaves = []
         for node in self.nodeList:

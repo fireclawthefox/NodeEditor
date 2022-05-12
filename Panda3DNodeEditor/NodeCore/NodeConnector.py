@@ -17,6 +17,9 @@ class NodeConnector:
         self.line = LineNodePath(ShowBaseGlobal.aspect2d, thickness=2, colorVec=(0.8,0.8,0.8,1))
         self.draw()
 
+        self.show = self.line.show
+        self.hide = self.line.hide
+
     def update(self):
         self.line.reset()
         self.draw()
