@@ -42,3 +42,14 @@ class NodeConnector:
         self.line.reset()
         self.socketA.setConnected(False)
         self.socketB.setConnected(False)
+
+    def setChecked(self):
+        self.line.setColor(0,1,0,1)
+        self.update()
+
+    def setError(self, hasError):
+        self.line.setColor(1,0,0,1)
+        self.update()
+
+    def __str__(self):
+        return f"Connection {self.socketA.name} to {self.socketB.name}"

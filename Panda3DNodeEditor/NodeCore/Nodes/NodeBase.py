@@ -30,6 +30,13 @@ class NodeBase(DirectObject):
         self.inputList = []
         self.outputList = []
         self.selected = False
+        self.allowRecursion = False
+        self.hasError = False
+
+        self.normalColor = (0.25, 0.25, 0.25, 1)
+        self.highlightColor = (0.45, 0.45, 0.45, 1)
+        self.errorColor = (1, 0.25, 0.25, 1)
+        self.errorHighlightColor = (1, 0.45, 0.45, 1)
 
         self.frame = DirectFrame(
             state = DGG.NORMAL,
@@ -38,7 +45,7 @@ class NodeBase(DirectObject):
             text_scale=0.1,
             text_pos=(self.left, 0.12),
             text_fg=(1,1,1,1),
-            frameColor=(0.25, 0.25, 0.25, 1),
+            frameColor=self.normalColor,
             frameSize=(self.left, self.right, -.6, 0.2),
             parent=parent)
 
@@ -69,6 +76,10 @@ class NodeBase(DirectObject):
         for inSocket in self.inputList:
             if inSocket.connected: return False
         return True
+
+    def setError(self, hasError):
+        self.hasError = hasError
+        self.setColor()
 
     def logic(self):
         """Run the logic of this node, process all in and output data.
@@ -142,10 +153,17 @@ class NodeBase(DirectObject):
         """Set this node as selected or deselected"""
         if self.selected == select: return
         self.selected = select
-        if self.selected:
-            self.frame["frameColor"] = (0.45, 0.45, 0.45, 1)
+        self.setColor()
+
+    def setColor(self):
+        if self.selected and not self.hasError:
+            self.frame["frameColor"] = self.highlightColor
+        elif self.selected and self.hasError:
+            self.frame["frameColor"] = self.errorHighlightColor
+        elif self.hasError:
+            self.frame["frameColor"] = self.errorColor
         else:
-            self.frame["frameColor"] = (0.25, 0.25, 0.25, 1)
+            self.frame["frameColor"] = self.normalColor
 
     def _dragStart(self, nodeFrame, event):
         # Mark this node as selected

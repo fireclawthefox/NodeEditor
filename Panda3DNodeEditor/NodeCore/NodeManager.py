@@ -322,7 +322,8 @@ class NodeManager:
         self.updateConnectedNodes(socket.node)
 
     def updateConnectedNodes(self, leaveNode):
-        self.updatedSockets = []
+        self.processedConnections = []
+        self.startNode = leaveNode
         self.__updateConnectedNodes(leaveNode)
 
     def __updateConnectedNodes(self, leaveNode):
@@ -330,16 +331,32 @@ class NodeManager:
         out sockets recursively down to the last connected node."""
         for connector in self.connections:
             for outSocket in leaveNode.outputList:
+                outSock = None
+                inSock = None
+
                 if connector.socketA is outSocket:
-                    connector.socketA.node.logic()
-                    connector.socketB.setValue(connector.socketA.getValue())
-                    connector.socketB.node.logic()
-                    self.__updateConnectedNodes(connector.socketB.node)
+                    inSock = connector.socketB
+                    outSock = connector.socketA
                 elif connector.socketB is outSocket:
-                    connector.socketB.node.logic()
-                    connector.socketA.setValue(connector.socketB.getValue())
-                    connector.socketA.node.logic()
-                    self.__updateConnectedNodes(connector.socketA.node)
+                    inSock = connector.socketA
+                    outSock = connector.socketB
+                else:
+                    continue
+
+                connector.setChecked()
+                outSock.node.logic()
+                inSock.setValue(outSock.getValue())
+                inSock.node.logic()
+
+                if connector in self.processedConnections:
+                    # this connector is leading to a recursion
+                    connector.setError(True)
+                    continue
+                self.processedConnections.append(connector)
+
+                self.__updateConnectedNodes(inSock.node)
+
+                self.processedConnections.remove(connector)
 
     def updateConnections(self, args=None):
         """Update line positions of all connections"""
