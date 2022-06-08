@@ -57,6 +57,7 @@ class Save:
                     frameSize=self.dlgOverwrite.bounds,
                     scale=300,
                     parent=base.pixel2d)
+                self.dlgOverwrite.setBin("gui-popup", 1)
             else:
                 self.__executeSave(True, path)
             base.messenger.send("setLastPath", [path])
