@@ -20,6 +20,8 @@ from Panda3DNodeEditor.Tools.JSONTools import JSONTools
 
 class Save:
     def __init__(self, nodes, connections, exceptionSave=False):
+        self.dlgOverwrite = None
+        self.dlgOverwriteShadow = None
         self.jsonElements = JSONTools().get(nodes, connections)
 
         if exceptionSave:
@@ -31,8 +33,6 @@ class Save:
 
     def save(self, doSave):
         if doSave:
-            self.dlgOverwrite = None
-            self.dlgOverwriteShadow = None
             path = self.browser.get()
             path = os.path.expanduser(path)
             path = os.path.expandvars(path)
@@ -70,5 +70,3 @@ class Save:
 
         with open(path, 'w') as outfile:
             json.dump(self.jsonElements, outfile, indent=2)
-
-
