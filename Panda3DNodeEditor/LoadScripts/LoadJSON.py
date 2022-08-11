@@ -18,7 +18,7 @@ from uuid import UUID
 class Load:
     def __init__(self, nodeMgr):
         self.nodeMgr = nodeMgr
-        self.browser = DirectFolderBrowser(self.load, True, defaultFilename="project.json")
+        self.browser = DirectFolderBrowser(self.load, True, defaultFilename="project.logic")
 
     def load(self, doLoad):
         if doLoad:

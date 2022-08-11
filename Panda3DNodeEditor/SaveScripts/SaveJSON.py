@@ -25,11 +25,11 @@ class Save:
         self.jsonElements = JSONTools().get(nodes, connections)
 
         if exceptionSave:
-            tmpPath = os.path.join(tempfile.gettempdir(), "NEExceptionSave.json")
+            tmpPath = os.path.join(tempfile.gettempdir(), "NEExceptionSave.logic")
             self.__executeSave(True, tmpPath)
             logging.info("Wrote crash session file to {}".format(tmpPath))
         else:
-            self.browser = DirectFolderBrowser(self.save, True, defaultFilename="project.json")
+            self.browser = DirectFolderBrowser(self.save, True, defaultFilename="project.logic")
 
     def save(self, doSave):
         if doSave:
