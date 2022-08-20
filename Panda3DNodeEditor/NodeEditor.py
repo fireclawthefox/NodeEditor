@@ -36,6 +36,11 @@ class NodeEditor(DirectObject):
         loadPrcFileData("", f"model-path {self.icon_dir}")
 
         #
+        # PROJECT RELATED
+        #
+        self.lastSavePath = None
+
+        #
         # NODE VIEW
         #
         self.viewNP = aspect2d.attachNewNode("viewNP")
@@ -152,8 +157,11 @@ class NodeEditor(DirectObject):
         #
         self.accept("NodeEditor_new", self.newProject)
         self.accept("NodeEditor_save", self.saveProject)
+        self.accept("NodeEditor_save_as", self.saveAsProject)
         self.accept("NodeEditor_load", self.loadProject)
         self.accept("quit_app", exit)
+
+        self.accept("setLastPath", self.setLastPath)
 
         #
         # EXPORTERS
@@ -183,8 +191,12 @@ class NodeEditor(DirectObject):
     # ------------------------------------------------------------------
     def newProject(self):
         self.nodeMgr.cleanup()
+        self.lastSavePath = None
 
     def saveProject(self):
+        Save(self.nodeMgr.nodeList, self.nodeMgr.connections, filepath=self.lastSavePath)
+
+    def saveAsProject(self):
         Save(self.nodeMgr.nodeList, self.nodeMgr.connections)
 
     def loadProject(self):
@@ -193,6 +205,9 @@ class NodeEditor(DirectObject):
 
     def customExport(self, exporter):
         exporter(self.nodeMgr.nodeList, self.nodeMgr.connections)
+
+    def setLastPath(self, path):
+        self.lastSavePath = path
 
     # ------------------------------------------------------------------
     # CAMERA SPECIFIC FUNCTIONS

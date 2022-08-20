@@ -19,55 +19,38 @@ from DirectFolderBrowser.DirectFolderBrowser import DirectFolderBrowser
 from Panda3DNodeEditor.Tools.JSONTools import JSONTools
 
 class Save:
-    def __init__(self, nodes, connections, exceptionSave=False):
+    def __init__(self, nodes, connections, exceptionSave=False, filepath=None):
         self.dlgOverwrite = None
         self.dlgOverwriteShadow = None
         self.jsonElements = JSONTools().get(nodes, connections)
 
         if exceptionSave:
             tmpPath = os.path.join(tempfile.gettempdir(), "NEExceptionSave.logic")
-            self.__executeSave(True, tmpPath)
+            self.__executeSave(tmpPath)
             logging.info("Wrote crash session file to {}".format(tmpPath))
         else:
-            self.browser = DirectFolderBrowser(self.save, True, defaultFilename="project.logic")
+            if filepath is None:
+                self.browser = DirectFolderBrowser(
+                    command=self.save,
+                    fileBrowser=True,
+                    askForOverwrite=True,
+                    defaultFilename="project.logic")
+            else:
+                self.__executeSave(filepath)
 
     def save(self, doSave):
         if doSave:
             path = self.browser.get()
             path = os.path.expanduser(path)
             path = os.path.expandvars(path)
-            if os.path.exists(path):
-                self.dlgOverwrite = YesNoDialog(
-                    text="File already Exist.\nOverwrite?",
-                    relief=DGG.RIDGE,
-                    frameColor=(1,1,1,1),
-                    frameSize=(-0.5,0.5,-0.3,0.2),
-                    sortOrder=1,
-                    button_relief=DGG.FLAT,
-                    button_frameColor=(0.8, 0.8, 0.8, 1),
-                    command=self.__executeSave,
-                    extraArgs=[path],
-                    scale=300,
-                    pos=(base.getSize()[0]/2, 0, -base.getSize()[1]/2),
-                    parent=base.pixel2d)
-                self.dlgOverwriteShadow = DirectFrame(
-                    pos=(base.getSize()[0]/2 + 10, 0, -base.getSize()[1]/2 - 10),
-                    sortOrder=0,
-                    frameColor=(0,0,0,0.5),
-                    frameSize=self.dlgOverwrite.bounds,
-                    scale=300,
-                    parent=base.pixel2d)
-                self.dlgOverwrite.setBin("gui-popup", 1)
-            else:
-                self.__executeSave(True, path)
+            self.__executeSave(path)
             base.messenger.send("setLastPath", [path])
         self.browser.destroy()
         del self.browser
 
-    def __executeSave(self, overwrite, path):
+    def __executeSave(self, path):
         if self.dlgOverwrite is not None: self.dlgOverwrite.destroy()
         if self.dlgOverwriteShadow is not None: self.dlgOverwriteShadow.destroy()
-        if not overwrite: return
 
         with open(path, 'w') as outfile:
             json.dump(self.jsonElements, outfile, indent=2)

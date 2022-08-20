@@ -41,6 +41,7 @@ class MenuBar():
             DirectMenuSeparator(),
             DirectMenuItemEntry("Open", base.messenger.send, ["NodeEditor_load"]),
             DirectMenuItemEntry("Save", base.messenger.send, ["NodeEditor_save"]),
+            DirectMenuItemEntry("Save As", base.messenger.send, ["NodeEditor_save_as"]),
             DirectMenuSeparator(),
             *customExporters,
             DirectMenuItemEntry("Quit", base.messenger.send, ["quit_app"]),
