@@ -316,6 +316,7 @@ class NodeEditor(DirectObject):
 
     def updateNodeStop(self, node=None):
         """Will be called when a node dragging stopped"""
+        if self.draggedNode is None: return
         self.draggedNode.enable()
         self.draggedNode = None
         self.tempNodePositions = {}
