@@ -229,6 +229,7 @@ class NodeBase(DirectObject):
             base.messenger.send("selectNode", [self, True, base.mouseWatcherNode.isButtonDown(KeyboardButton.shift())])
         # tell everyone we stopped moving the node
         base.messenger.send("dragNodeStop", [self])
+        base.messenger.send("NodeEditor_set_dirty")
 
     def getLeftEdge(self):
         """Get the left edge of the frame as seen from the frame"""

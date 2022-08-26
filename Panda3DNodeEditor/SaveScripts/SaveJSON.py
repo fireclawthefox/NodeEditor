@@ -54,3 +54,5 @@ class Save:
 
         with open(path, 'w') as outfile:
             json.dump(self.jsonElements, outfile, indent=2)
+
+        base.messenger.send("NodeEditor_set_clean")

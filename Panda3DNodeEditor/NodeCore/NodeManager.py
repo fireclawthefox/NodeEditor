@@ -43,6 +43,8 @@ class NodeManager:
         self.connections = []
         self.selectedNodes = []
 
+        base.messenger.send("NodeEditor_set_clean")
+
     #-------------------------------------------------------------------
     # NODE MANAGEMENT
     #-------------------------------------------------------------------
@@ -55,10 +57,9 @@ class NodeManager:
         nodeType can be either a node class type or a string representing such a type"""
         if isinstance(nodeType, str):
             try:
-                print("try load node")
-                print(nodeType + ".Node")
+                logging.debug(f"try load node from string: {nodeType}")
                 nodeType = eval(nodeType + ".Node")
-                print(nodeType)
+                #logging.debug(nodeType)
             except:
                 logging.error("loading failed", exc_info=True)
                 nodeClassName = nodeType.split(".")[-1]
@@ -76,6 +77,7 @@ class NodeManager:
         try:
             node = nodeType(self.nodeViewNP)
             self.nodeList.append(node)
+            base.messenger.send("NodeEditor_set_dirty")
             return node
         except Exception as e:
             logging.error("Failed to load node type", exc_info=True)
@@ -91,6 +93,7 @@ class NodeManager:
             node = nodeType(self.nodeViewNP)
         node.create()
         self.nodeList.append(node)
+        base.messenger.send("NodeEditor_set_dirty")
         return node
 
     def removeNode(self, selectedNodes=[]):
@@ -124,6 +127,8 @@ class NodeManager:
             self.nodeList.remove(node)
             node.destroy()
             del node
+
+        base.messenger.send("NodeEditor_set_clean")
 
     def selectNode(self, node, selected, addToSelection=False, deselectOthersIfUnselected=False):
         """Select or deselect the given node according to the boolean value in selected.
@@ -212,6 +217,8 @@ class NodeManager:
 
         self.updateAllLeaveNodes()
 
+        base.messenger.send("NodeEditor_set_dirty")
+
     #-------------------------------------------------------------------
     # CONNECTION MANAGEMENT
     #-------------------------------------------------------------------
@@ -258,6 +265,7 @@ class NodeManager:
 
                     self.startSocket = None
                     self.endSocket = None
+                    base.messenger.send("NodeEditor_set_dirty")
                     return
             if (self.startSocket.type == INSOCKET and not self.startSocket.allowMultiConnect) \
             or (self.endSocket.type == INSOCKET and not self.endSocket.allowMultiConnect):
@@ -276,6 +284,7 @@ class NodeManager:
             self.updateConnectedNodes(outSocketNode)
             self.startSocket = None
             self.endSocket = None
+            base.messenger.send("NodeEditor_set_dirty")
             return connector
 
     def showConnections(self):

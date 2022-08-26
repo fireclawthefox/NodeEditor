@@ -8,6 +8,7 @@ See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 
 import os
 import json
+import logging
 
 # NOTE: LPoint3f is required for loading the position from json using eval
 from panda3d.core import LPoint3f
@@ -48,8 +49,13 @@ class Load:
         # 1. Create all nodes
         jsonNodes = fileContent["Nodes"]
         newNodes = []
+        hasUnknownNodes = False
         for jsonNode in jsonNodes:
             node = self.nodeMgr.createNode(jsonNode["type"])
+            if node is None:
+                logging.error(f"Couldn't load node of type: {jsonNode['type']}")
+                hasUnknownNodes = True
+                continue
             node.nodeID = UUID(jsonNode["id"])
             node.setPos(eval(jsonNode["pos"]))
             for i in range(len(jsonNode["inSockets"])):
@@ -62,6 +68,9 @@ class Load:
                 node.outputList[i].socketID = UUID(outSocket["id"])
             node.show()
             newNodes.append(node)
+
+        if hasUnknownNodes:
+            logging.info("Some nodes could not be loaded. Make sure all node extensions are available.")
 
         # 2. Connect all nodes
         jsonConnections = fileContent["Connections"]
@@ -76,6 +85,10 @@ class Load:
                 elif node.nodeID == UUID(jsonConnection["nodeB_ID"]):
                     nodeB = node
 
+            if nodeA is None or nodeB is None:
+                logging.error(f"could not connect nodes: {nodeA} - {nodeB}")
+                continue
+
             socketA = None
             socketB = None
             for socket in nodeA.inputList + nodeA.outputList + nodeB.inputList + nodeB.outputList:
@@ -89,4 +102,7 @@ class Load:
         # 3. Run logic from all leave nodes down to the end
         self.nodeMgr.updateAllLeaveNodes()
 
+        base.messenger.send("NodeEditor_set_clean")
+
+        base.messenger.send("setLastPath", [path])
 

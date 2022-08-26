@@ -39,6 +39,7 @@ class NodeEditor(DirectObject):
         # PROJECT RELATED
         #
         self.lastSavePath = None
+        self.dirty = False
 
         #
         # NODE VIEW
@@ -79,7 +80,7 @@ class NodeEditor(DirectObject):
         """
         This method returns True if an unsaved state of the editor is given
         """
-        return len(self.nodeMgr.getAllNodes()) > 0
+        return self.dirty
 
     def enable_editor(self):
         """
@@ -161,6 +162,9 @@ class NodeEditor(DirectObject):
         self.accept("NodeEditor_load", self.loadProject)
         self.accept("quit_app", exit)
 
+        self.accept("NodeEditor_set_dirty", self.set_dirty)
+        self.accept("NodeEditor_set_clean", self.set_clean)
+
         self.accept("setLastPath", self.setLastPath)
 
         #
@@ -208,6 +212,15 @@ class NodeEditor(DirectObject):
 
     def setLastPath(self, path):
         self.lastSavePath = path
+
+    def set_dirty(self):
+        base.messenger.send("request_dirty_name")
+        self.dirty = True
+
+    def set_clean(self):
+        base.messenger.send("request_clean_name")
+        self.dirty = False
+        self.hasSaved = True
 
     # ------------------------------------------------------------------
     # CAMERA SPECIFIC FUNCTIONS
