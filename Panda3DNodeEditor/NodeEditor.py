@@ -366,6 +366,7 @@ class NodeEditor(DirectObject):
         taskMgr.remove("dragBoxDrawTask")
         if self.startPos is None or self.lastPos is None: return
         self.nodeMgr.deselectAll()
+
         if self.box is not None:
             for node in self.nodeMgr.getAllNodes():
                 # store some view scales for calculations
@@ -373,10 +374,11 @@ class NodeEditor(DirectObject):
                 viewZScale = self.viewNP.getScale().getZ()
 
                 # calculate the node edges
-                nodeLeft = node.getLeft() * viewXScale
-                nodeRight = node.getRight() * viewXScale
-                nodeBottom = node.getBottom() * viewZScale
-                nodeTop = node.getTop() * viewZScale
+                p = node.frame.get_parent()
+                nodeLeft = node.getLeft(p) * viewXScale / base.a2dRight
+                nodeRight = node.getRight(p) * viewXScale / base.a2dRight
+                nodeBottom = node.getBottom(p) * viewZScale / base.a2dTop
+                nodeTop = node.getTop(p) * viewZScale / base.a2dTop
 
                 # calculate bounding box edges
                 left = min(self.lastPos.getX(), self.startPos.getX())
@@ -384,19 +386,79 @@ class NodeEditor(DirectObject):
                 top = max(self.lastPos.getY(), self.startPos.getY())
                 bottom = min(self.lastPos.getY(), self.startPos.getY())
 
-                # check for hits
-                xGood = yGood = False
-                if left < nodeLeft and right > nodeLeft:
-                    xGood = True
-                elif left < nodeRight and right > nodeRight:
-                    xGood = True
-                if top > nodeTop and bottom < nodeTop:
-                    yGood = True
-                elif top > nodeBottom and bottom < nodeBottom:
-                    yGood = True
+                l_in_l = left > nodeLeft
+                r_in_r = right < nodeRight
+                b_in_t = bottom < nodeTop
+                t_in_b = top > nodeBottom
 
-                # check if we have any hits
-                if xGood and yGood:
+                r_in_l = right > nodeLeft
+                l_in_r = left < nodeRight
+                t_in_t = top < nodeTop
+                b_in_b = bottom > nodeBottom
+
+                l_out_l = left < nodeLeft
+                r_out_r = right > nodeRight
+                b_out_b = bottom < nodeBottom
+                t_out_t = top > nodeTop
+
+                nodeHit = False
+
+                #
+                # Side checks
+                #
+                if l_in_l and r_in_r and t_in_b and t_in_t:
+                    # Box hits middle from below
+                    nodeHit = True
+                elif l_in_l and r_in_r and b_in_t and b_in_b:
+                    # Box hits middle from above
+                    nodeHit = True
+                elif t_in_t and b_in_b and r_in_l and r_in_r:
+                    # Box hits middle from left
+                    nodeHit = True
+                elif t_in_t and b_in_b and l_in_r and l_in_l:
+                    # Box hits middle from right
+                    nodeHit = True
+
+                #
+                # Corner checks
+                #
+                elif r_in_l and r_in_r and b_in_t and b_in_b:
+                    # Box hits top left corner
+                    nodeHit = True
+                elif l_in_r and l_in_l and b_in_t and b_in_b:
+                    # Box hits top right corner
+                    nodeHit = True
+                elif l_in_r and l_in_l and t_in_b and t_in_t:
+                    # Box hits bottom right corner
+                    nodeHit = True
+                elif r_in_l and r_in_r and t_in_b and t_in_t:
+                    # Box hits bottom left corner
+                    nodeHit = True
+
+                #
+                # surrounding checks
+                #
+                elif l_in_r and l_in_l and t_out_t and b_out_b:
+                    # box encases the left of the node
+                    nodeHit = True
+                elif r_in_l and r_in_r and t_out_t and b_out_b:
+                    # box encases the right of the node
+                    nodeHit = True
+                elif t_in_b and t_in_t and r_out_r and l_out_l:
+                    # box encases the bottom of the node
+                    nodeHit = True
+                elif b_in_t and b_in_b and r_out_r and l_out_l:
+                    # box encases the top of the node
+                    nodeHit = True
+
+                #
+                # Node fully encased
+                #
+                elif l_out_l and r_out_r and b_out_b and t_out_t:
+                    # box encased fully
+                    nodeHit = True
+
+                if nodeHit:
                     self.nodeMgr.selectNode(node, True, True)
 
             # Cleanup the selection box

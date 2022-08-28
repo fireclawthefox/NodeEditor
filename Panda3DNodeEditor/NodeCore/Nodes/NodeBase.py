@@ -251,22 +251,22 @@ class NodeBase(DirectObject):
         """Get left edge of the frame with respect to it's position as seen from the given np"""
         if np is None:
             np = render2d
-        return self.getPos(render2d).getX() + self.frame["frameSize"][0]
+        return self.getPos(np).getX() + self.frame["frameSize"][0]
 
     def getRight(self, np=None):
         """Get right edge of the frame with respect to it's position as seen from the given np"""
         if np is None:
             np = render2d
-        return self.getPos(render2d).getX() + self.frame["frameSize"][1]
+        return self.getPos(np).getX() + self.frame["frameSize"][1]
 
     def getBottom(self, np=None):
         """Get bottom edge of the frame with respect to it's position as seen from the given np"""
         if np is None:
             np = render2d
-        return self.getPos(render2d).getZ() + self.frame["frameSize"][2]
+        return self.getPos(np).getZ() + self.frame["frameSize"][2]
 
     def getTop(self, np=None):
         """Get top edge of the frame with respect to it's position as seen from the given np"""
         if np is None:
             np = render2d
-        return self.getPos(render2d).getZ() + self.frame["frameSize"][3]
+        return self.getPos(np).getZ() + self.frame["frameSize"][3]
