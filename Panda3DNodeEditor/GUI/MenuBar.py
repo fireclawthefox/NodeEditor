@@ -11,7 +11,7 @@ from direct.gui import DirectGuiGlobals as DGG
 
 from direct.gui.DirectFrame import DirectFrame
 from DirectGuiExtension.DirectMenuItem import DirectMenuItem, DirectMenuItemEntry, DirectMenuItemSubMenu, DirectMenuSeparator
-from DirectGuiExtension.DirectBoxSizer import DirectBoxSizer
+from DirectGuiExtension.DirectMenuBar import DirectMenuBar
 
 
 class MenuBar():
@@ -21,7 +21,7 @@ class MenuBar():
         #
         # Menubar
         #
-        self.menu_bar = DirectBoxSizer(
+        self.menu_bar = DirectMenuBar(
             frameColor=(0.25, 0.25, 0.25, 1),
             frameSize=(0,screenWidthPx,-12, 12),
             autoUpdateFrameSize=False,
@@ -109,10 +109,7 @@ class MenuBar():
 
         self.nodes = self.__create_menu_item("Nodes", self.nodes_entries)
 
-        self.menu_bar.addItem(self.file, skipRefresh=True)
-        self.menu_bar.addItem(self.view, skipRefresh=True)
-        self.menu_bar.addItem(self.tool, skipRefresh=True)
-        self.menu_bar.addItem(self.nodes)
+        self.menu_bar["menuItems"] = [self.file, self.view, self.tool, self.nodes]
 
     def __create_menu_item(self, text, entries):
         color = (
