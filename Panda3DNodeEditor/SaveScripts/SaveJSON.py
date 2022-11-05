@@ -20,8 +20,6 @@ from Panda3DNodeEditor.Tools.JSONTools import JSONTools
 
 class Save:
     def __init__(self, nodes, connections, exceptionSave=False, filepath=None):
-        self.dlgOverwrite = None
-        self.dlgOverwriteShadow = None
         self.jsonElements = JSONTools().get(nodes, connections)
 
         if exceptionSave:
@@ -34,7 +32,8 @@ class Save:
                     command=self.save,
                     fileBrowser=True,
                     askForOverwrite=True,
-                    defaultFilename="project.logic")
+                    defaultFilename="project.logic",
+                    title="Save Node Editor Project")
             else:
                 self.__executeSave(filepath)
 
@@ -49,9 +48,6 @@ class Save:
         del self.browser
 
     def __executeSave(self, path):
-        if self.dlgOverwrite is not None: self.dlgOverwrite.destroy()
-        if self.dlgOverwriteShadow is not None: self.dlgOverwriteShadow.destroy()
-
         with open(path, 'w') as outfile:
             json.dump(self.jsonElements, outfile, indent=2)
 
