@@ -55,9 +55,12 @@ class NodeBase(DirectObject):
         self.setPos = self.frame.setPos
         self.getPos = self.frame.getPos
 
-    def addIn(self, name, socketType, allowMultiConnect=False):
+    def addIn(self, name, socketType, allowMultiConnect=False, extraArgs=None):
         """Add a new input socket of the given socket type"""
-        inSocket = socketType(self, name)
+        if extraArgs is not None:
+            inSocket = socketType(self, name, *extraArgs)
+        else:
+            inSocket = socketType(self, name)
         inSocket.allowMultiConnect = allowMultiConnect
         self.inputList.append(inSocket)
 
