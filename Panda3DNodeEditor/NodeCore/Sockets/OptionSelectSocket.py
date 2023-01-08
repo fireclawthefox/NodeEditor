@@ -3,6 +3,8 @@
 
 # This file was created using the DirectGUI Designer
 
+import logging
+
 from Panda3DNodeEditor.NodeCore.Sockets.SocketBase import SocketBase, INSOCKET
 
 from direct.gui.DirectFrame import DirectFrame
@@ -60,9 +62,9 @@ class OptionSelectSocket(SocketBase):
 
     def setValue(self, value):
         try:
-            self.optionsfield.set(index)
+            self.optionsfield.set(value)
         except:
-            logging.error("couldn't set the value for the option selection")
+            logging.error(f"couldn't set the value {value} for the option selection")
             return
 
     def getValue(self):

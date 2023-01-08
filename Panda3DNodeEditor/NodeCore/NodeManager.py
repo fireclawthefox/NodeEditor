@@ -57,11 +57,10 @@ class NodeManager:
         nodeType can be either a node class type or a string representing such a type"""
         if isinstance(nodeType, str):
             try:
-                logging.debug(f"try load node from string: {nodeType}")
+                logging.debug(f"try load node from string: {nodeType}.Node")
                 nodeType = eval(nodeType + ".Node")
-                #logging.debug(nodeType)
             except:
-                logging.error("loading failed", exc_info=True)
+                logging.debug("loading custom node")
                 nodeClassName = nodeType.split(".")[-1]
                 # try for the custom nodes
                 for entry, customNodeType in self.customNodeMap.items():
@@ -74,6 +73,8 @@ class NodeManager:
                             nodeType = customNodeType[1]
                 if nodeType is None:
                     logging.error(f"couldn't add unknown node type: {nodeType}")
+                else:
+                    logging.debug(f"found Node type: {nodeType}")
         try:
             node = nodeType(self.nodeViewNP)
             self.nodeList.append(node)
