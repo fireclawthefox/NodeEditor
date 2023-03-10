@@ -10,7 +10,7 @@ from Panda3DNodeEditor.GUI.MenuBar import MenuBar
 
 
 class MainView():
-    def __init__(self, parent, customNodeMap, customExporterMap):
+    def __init__(self, parent, defaultNodeMap, customNodeMap, customExporterMap):
         logging.debug("Setup GUI")
 
         self.menuBarHeight = 24
@@ -49,7 +49,7 @@ class MainView():
         #
         # CONTENT SETUP
         #
-        self.menu_bar = MenuBar(customNodeMap, customExporterMap)
+        self.menu_bar = MenuBar(defaultNodeMap, customNodeMap, customExporterMap)
         self.menu_bar_sizer.setChild(self.menu_bar.menu_bar)
         self.menu_bar_sizer["childUpdateSizeFunc"] = self.menu_bar.menu_bar.refresh
 

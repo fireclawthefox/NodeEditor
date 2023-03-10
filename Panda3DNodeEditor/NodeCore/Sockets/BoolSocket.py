@@ -3,6 +3,8 @@
 
 # This file was created using the DirectGUI Designer
 
+import ast
+
 from Panda3DNodeEditor.NodeCore.Sockets.SocketBase import SocketBase, INSOCKET
 
 from direct.gui.DirectFrame import DirectFrame
@@ -25,20 +27,6 @@ class BoolSocket(SocketBase):
 
         SocketBase.createPlug(self, self.frame)
 
-        '''
-        self.text = DirectLabel(
-            frameColor=(0, 0, 0, 0),
-            frameSize=(0, 1, -self.height, 0),
-            scale=(1, 1, 1),
-            text=self.name,
-            text_align=TextNode.A_left,
-            text_scale=(0.1, 0.1),
-            text_pos=(0.1, -0.02),
-            text_fg=(1, 1, 1, 1),
-            text_bg=(0, 0, 0, 0),
-            parent=self.frame,
-        )'''
-
         self.checkbox = DirectCheckButton(
             text = name,
             pos=(0.5,0,0),
@@ -49,6 +37,8 @@ class BoolSocket(SocketBase):
         self.resize(1)
 
     def setValue(self, value):
+        if isinstance(value, str):
+            value = True if value.lower() in ["1", "true", "#t"] else False
         self.checkbox["indicatorValue"] = value
         self.checkbox.setIndicatorValue()
 
@@ -69,3 +59,11 @@ class BoolSocket(SocketBase):
         else:
             self.checkbox["state"] = DGG.NORMAL
         self.connected = connected
+
+    def getAst(self):
+        #THIS MAY NOT WORK SINCE WE DON'T HAVE THE CONNECTION
+        #if self.connected:
+        #    return ast.Constant(self.)
+        #else:
+        #    return ast.Constant(self.getValue())
+        ...

@@ -16,7 +16,7 @@ from Panda3DNodeEditor.NodeCore.Sockets.SocketBase import OUTSOCKET, INSOCKET
 from Panda3DNodeEditor.NodeCore.NodeConnector import NodeConnector
 
 class NodeManager:
-    def __init__(self, nodeViewNP=None, customNodeMap=None):
+    def __init__(self, nodeViewNP=None, defaultNodeMap=None, customNodeMap=None):
         # Node Management
         self.nodeList = []
 
@@ -30,6 +30,7 @@ class NodeManager:
 
         self.nodeViewNP = nodeViewNP
 
+        self.defaultNodeMap = defaultNodeMap
         self.customNodeMap = customNodeMap
 
     def cleanup(self):
@@ -51,44 +52,65 @@ class NodeManager:
     def getAllNodes(self):
         return self.nodeList
 
-    def createNode(self, nodeType):
+    def createNode(self, nodeType, typeName):
         """Creates a node of the given type and returns it. Returns None
         if the node could not be created.
         nodeType can be either a node class type or a string representing such a type"""
-        if isinstance(nodeType, str):
+        node = None
+        nodeClassName = nodeType.split(".")[-1]
+        if nodeClassName == "NodeBase":
             try:
-                logging.debug(f"try load node from string: {nodeType}.Node")
-                nodeType = eval(nodeType + ".Node")
-            except:
-                logging.debug("loading custom node")
-                nodeClassName = nodeType.split(".")[-1]
-                # try for the custom nodes
-                for entry, customNodeType in self.customNodeMap.items():
-                    if type(customNodeType) == dict:
-                        for sub_entry, sub_customNodeType in customNodeType.items():
-                            if sub_customNodeType[0] == nodeClassName:
-                                nodeType = sub_customNodeType[1]
-                    else:
-                        if customNodeType[0] == nodeClassName:
-                            nodeType = customNodeType[1]
-                if nodeType is None:
-                    logging.error(f"couldn't add unknown node type: {nodeType}")
+                nodeInfo = self.findInNodeMap(typeName, self.defaultNodeMap)[1]
+                node = nodeInfo[0](nodeInfo[1], self.nodeViewNP)
+                node.recreation = [nodeInfo[0], nodeInfo[1]]
+            except Exception as e:
+                logging.error("Failed to load node type", exc_info=True)
+                return None
+        else:
+            logging.debug("loading custom node")
+            # try for the custom nodes
+            for entry, customNodeType in self.customNodeMap.items():
+                if type(customNodeType) == dict:
+                    for sub_entry, sub_customNodeType in customNodeType.items():
+                        if sub_customNodeType[0] == nodeClassName:
+                            nodeType = sub_customNodeType[1]
                 else:
-                    logging.debug(f"found Node type: {nodeType}")
-        try:
-            node = nodeType(self.nodeViewNP)
-            self.nodeList.append(node)
-            base.messenger.send("NodeEditor_set_dirty")
-            return node
-        except Exception as e:
-            logging.error("Failed to load node type", exc_info=True)
-            return None
+                    if customNodeType[0] == nodeClassName:
+                        nodeType = customNodeType[1]
+            if nodeType is None:
+                logging.error(f"couldn't add unknown node type: {nodeType}")
+            else:
+                logging.debug(f"found Node type: {nodeType}")
+            try:
+                node = nodeType(self.nodeViewNP)
+            except Exception as e:
+                logging.error("Failed to load node type", exc_info=True)
+                return None
+
+        self.nodeList.append(node)
+        base.messenger.send("NodeEditor_set_dirty")
+        return node
+
+    def findInNodeMap(self, typeName, nodemap):
+        for nodeName, nodeInfo in nodemap.items():
+            if type(nodeInfo) == dict:
+                ni = self.findInNodeMap(typeName, nodeInfo)
+                if ni is not None:
+                    return ni
+            elif nodeInfo[0] == typeName:
+                return nodeInfo
+        return None
 
     def addNode(self, nodeType):
         """Create a node of the given type"""
         self.deselectAll()
         node = None
-        if isinstance(nodeType, str):
+        if isinstance(nodeType, list):
+            print("CREATE:", nodeType)
+            node = nodeType[0](nodeType[1], self.nodeViewNP)
+            node.typeName = node.typeName
+            node.recreation = [nodeType[0], nodeType[1]]
+        elif isinstance(nodeType, str):
             node = eval(nodeType + ".Node")(self.nodeViewNP)
         else:
             node = nodeType(self.nodeViewNP)
@@ -176,7 +198,13 @@ class NodeManager:
         # create shallow copies of all nodes
         newNodeList = []
         for node in self.selectedNodes:
-            newNode = type(node)(self.nodeViewNP)
+            if type(node) == NodeBase:
+                print(node.recreation)
+                newNode = node.recreation[0](node.recreation[1], self.nodeViewNP)
+                newNode.recreation = node.recreation
+                print(newNode)
+            else:
+                newNode = type(node)(self.nodeViewNP)
             newNode.show()
             newNode.frame.setPos(node.frame.getPos())
             newNodeList.append(newNode)
@@ -319,7 +347,7 @@ class NodeManager:
         # Update logic of in socket node
         inSocketNode = socketA.node if socketA.type is INSOCKET else socketB.node
         inSocket = socketA if socketA.type is INSOCKET else socketB
-        inSocket.value = None
+        inSocket.setValue(None)
         inSocketNode.logic()
         self.updateConnectedNodes(inSocketNode)
 
@@ -327,7 +355,7 @@ class NodeManager:
         """Update the logic of the given node and all nodes connected
         down the given"""
         if socket.type is INSOCKET:
-            socket.value = None
+            socket.setValue(None)
         socket.node.logic()
         self.updateConnectedNodes(socket.node)
 

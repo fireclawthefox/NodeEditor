@@ -26,12 +26,19 @@ class NodeBase(DirectObject):
         self.right = 0.5
         self.left = -0.5
         self.name = name
+        self.typeName = typeName
         self.nodeID = uuid4()
         self.inputList = []
         self.outputList = []
         self.selected = False
         self.allowRecursion = False
         self.hasError = False
+        self.pyTemplate = ""
+        self.astRepr = None
+
+        # a special variable to store everything needed to re-create
+        # this specific node
+        self.recreation = []
 
         self.normalColor = (0.25, 0.25, 0.25, 1)
         self.highlightColor = (0.45, 0.45, 0.45, 1)
@@ -64,10 +71,42 @@ class NodeBase(DirectObject):
         inSocket.allowMultiConnect = allowMultiConnect
         self.inputList.append(inSocket)
 
+    def removeIn(self, socket):
+        if socket in self.inputList:
+            socket.remove()
+            self.inputList.remove(socket)
+
+    def hasInSocketNamed(self, name):
+        for socket in self.inputList:
+            if socket.name == name:
+                return True
+        return False
+
+    def removeInByNameAndType(self, name, socketType):
+        for socket in self.inputList[:]:
+            if socket.name == name and type(socket) == socketType:
+                self.removeIn(socket)
+
     def addOut(self, name):
         """Add a new output socket"""
         outSocket = OutSocket(self, name)
         self.outputList.append(outSocket)
+
+    def removeOut(self, socket):
+        if socket in self.outputList:
+            socket.remove()
+            self.outputList.remove(socket)
+
+    def removeOutByName(self, name):
+        for socket in self.outputList[:]:
+            if socket.name == name:
+                self.removeOut(socket)
+
+    def hasOutSocketNamed(self, name):
+        for socket in self.outputList:
+            if socket.name == name:
+                return True
+        return False
 
     def isLeaveNode(self):
         """Returns true if this is a leave node.
@@ -87,7 +126,33 @@ class NodeBase(DirectObject):
     def logic(self):
         """Run the logic of this node, process all in and output data.
         This is a stub and should be overwritten by the derived classes"""
-        pass
+        value = []
+        valueLists = []
+        for inSocket in self.inputList:
+            value.append(inSocket.getValue())
+        for outSocket in self.outputList:
+            outSocket.setValue(value)
+        #if self.inputList[0].value is None or self.inputList[1].value is None:
+        #    self.outputList[0].value = float("NaN")
+        #    return
+        #self.outputList[0].value = self.inputList[0].value + self.inputList[1].value
+
+    def replacePlaceholders(self, text):
+        for socket in self.inputList + self.outputList:
+            placeholder = f"{{{socket.name}}}"
+            if placeholder in text:
+                text = text.replace(placeholder, socket.node.getPy())
+        return text
+
+    def getPy(self):
+        return self.replacePlaceholders(self.pyTemplate)
+
+    def getAst(self):
+        """Returns the Abstract Syntax Tree representation of this node"""
+
+        self.astRepr = ast.parse(self.getPy(), type_comments=True)
+
+        return self.astRepr
 
     def update(self):
         """Show all sockets and resize the frame to fit all sockets in"""

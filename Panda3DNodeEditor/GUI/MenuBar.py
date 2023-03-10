@@ -15,7 +15,7 @@ from DirectGuiExtension.DirectMenuBar import DirectMenuBar
 
 
 class MenuBar():
-    def __init__(self, customNodeMap, customExporterMap):
+    def __init__(self, defaultNodeMap, customNodeMap, customExporterMap):
         screenWidthPx = base.getSize()[0]
 
         #
@@ -64,18 +64,7 @@ class MenuBar():
             ]
         self.tool = self.__create_menu_item("Tools", self.tool_entries)
 
-        self.node_map = {
-            "Math Nodes >":{
-                "Numeric Input":"NumericNode",
-                "Addition":"AddNode",
-                "Divide":"DivideNode",
-                "Multiply":"MultiplyNode"},
-            "Boolean Nodes >":{
-                "Boolean Value":"BoolNode",
-                "Boolean And":"BoolAnd",
-                "Boolean Or":"BoolOr"},
-            "Simple Output":"TestOutNode"
-        }
+        self.node_map = defaultNodeMap
         self.node_map.update(customNodeMap)
 
         self.nodes_entries = []

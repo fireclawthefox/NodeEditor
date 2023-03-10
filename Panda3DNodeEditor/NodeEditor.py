@@ -24,6 +24,7 @@ from Panda3DNodeEditor.SaveScripts.SaveJSON import Save
 from Panda3DNodeEditor.LoadScripts.LoadJSON import Load
 from Panda3DNodeEditor.GUI.MainView import MainView
 from Panda3DNodeEditor.NodeCore.NodeManager import NodeManager
+from Panda3DNodeEditor.NodeCore.Nodes.NodeJSONLoader import NodeJSONLoader
 
 class NodeEditor(DirectObject):
     def __init__(self, parent, customNodeMap={}, customExporterMap={}):
@@ -48,9 +49,16 @@ class NodeEditor(DirectObject):
         self.viewNP.setScale(0.5)
 
         #
+        # NODE LOADING
+        #
+        self.nodeJSONLoader = NodeJSONLoader(
+            os.path.join(fn, "NodeCore", "Nodes", "pythonNodes.json"))
+        defaultNodeMap = self.nodeJSONLoader.getNodeMap()
+
+        #
         # NODE MANAGER
         #
-        self.nodeMgr = NodeManager(self.viewNP, customNodeMap)
+        self.nodeMgr = NodeManager(self.viewNP, defaultNodeMap, customNodeMap)
 
         # Drag view
         self.mouseSpeed = 1
@@ -69,7 +77,7 @@ class NodeEditor(DirectObject):
         #
         # MENU BAR
         #
-        self.mainView = MainView(parent, customNodeMap, customExporterMap)
+        self.mainView = MainView(parent, defaultNodeMap, customNodeMap, customExporterMap)
 
         self.enable_editor()
 

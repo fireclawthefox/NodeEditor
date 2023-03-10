@@ -17,6 +17,7 @@ class JSONTools:
                 {
                     "id":str(node.nodeID),
                     "type":node.__module__,
+                    "typeName":node.typeName,
                     "pos":str(node.frame.getPos()),
                     "inSockets":self.__getSockets(node.inputList),
                     "outSockets":self.__getSockets(node.outputList)

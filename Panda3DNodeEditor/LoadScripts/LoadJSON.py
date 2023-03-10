@@ -51,9 +51,9 @@ class Load:
         newNodes = []
         hasUnknownNodes = False
         for jsonNode in jsonNodes:
-            node = self.nodeMgr.createNode(jsonNode["type"])
+            node = self.nodeMgr.createNode(jsonNode["type"], jsonNode["typeName"])
             if node is None:
-                logging.error(f"Couldn't load node of type: {jsonNode['type']}")
+                logging.error(f"Couldn't load node of type: {jsonNode['type']} {jsonNode['typeName']}")
                 hasUnknownNodes = True
                 continue
             node.nodeID = UUID(jsonNode["id"])
