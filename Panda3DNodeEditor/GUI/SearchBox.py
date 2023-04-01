@@ -41,7 +41,7 @@ class SearchBoxEntry(DirectButton):
         self.resetFrameSize()
 
 class SearchBox(DirectObject):
-    def __init__(self, numEntriesPerPage=50):
+    def __init__(self, numEntriesPerPage=50, closeCommand=None):
         self.numEntriesPerPage = numEntriesPerPage
         self.allEntries = []
         self.entries = []
@@ -56,15 +56,38 @@ class SearchBox(DirectObject):
             self.baseFrame,
             self.baseBoxSizer)
 
+        self.searchBarBox = DirectBoxSizer(
+            frameColor=(1,1,1,1))
         entrySize = 0.05
         self.searchEntry = DirectEntry(
             scale=entrySize,
-            width=1/entrySize-0.4,
+            width=1/entrySize-0.4-3.4,
             borderWidth=[0.2,0.2],
             command=self.filter)
-        self.baseBoxSizer.addItem(self.searchEntry)
+        self.searchBarBox.addItem(self.searchEntry)
         self.accept(self.searchEntry.guiItem.getTypeEvent(), self.filter)
         self.accept(self.searchEntry.guiItem.getEraseEvent(), self.filter)
+
+        btnSize = 0.85
+        self.btnSearch = DirectButton(
+            text=">",
+            text_pos=(0,-0.25),
+            scale=entrySize,
+            frameSize=[-btnSize, btnSize, -btnSize, btnSize],
+            command=self.filter
+        )
+        self.searchBarBox.addItem(self.btnSearch)
+
+        self.btnClose = DirectButton(
+            text="x",
+            text_pos=(0,-0.25),
+            scale=entrySize,
+            frameSize=[-btnSize, btnSize, -btnSize, btnSize],
+            command=closeCommand
+        )
+        self.searchBarBox.addItem(self.btnClose)
+
+        self.baseBoxSizer.addItem(self.searchBarBox)
 
         fs = self.baseFrame["frameSize"]
         remSize = self.baseBoxSizer.getRemainingSpace() - 0.1
@@ -125,7 +148,7 @@ class SearchBox(DirectObject):
             fullMatch = fullMatch and match
         return fullMatch
 
-    def filter(self, args):
+    def filter(self, args=None):
         searchTextRaw = self.searchEntry.get()
         searchTextEntries = searchTextRaw.split(" ")
         self.searchTextEntriesLower = []

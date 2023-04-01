@@ -116,7 +116,7 @@ class NodeEditor(DirectObject):
         #
         # SEARCH BOX
         #
-        self.searchBox = SearchBox(50)
+        self.searchBox = SearchBox(50, self.searchBoxClose)
         self.searchBox.hide()
 
         # Search Box content
@@ -606,6 +606,8 @@ class NodeEditor(DirectObject):
     # SEARCH BOX
     # ------------------------------------------------------------------
     def searchBoxSelect(self, node):
-        print(node)
         self.searchBox.hide()
         base.messenger.send("addNode", [node])
+
+    def searchBoxClose(self):
+        self.searchBox.hide()
