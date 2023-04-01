@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import (
+    Filename,
     loadPrcFileData,
     WindowProperties,
     AntialiasAttrib)
@@ -47,6 +49,19 @@ base.win.setClearColor((0.16, 0.16, 0.16, 1))
 render.setAntialias(AntialiasAttrib.MAuto)
 render2d.setAntialias(AntialiasAttrib.MAuto)
 
-NodeEditor(base.pixel2d)
+
+fn = Filename.fromOsSpecific(os.path.dirname(__file__))
+fn.makeTrueCase()
+
+customNodeJSONFiles = []
+for root, dirs, files in os.walk(os.path.join(fn, "panda3d_definitions")):
+    for jsonFile in files:
+        if not jsonFile.endswith(".json"): continue
+        customNodeJSONFiles.append(os.path.join(root, jsonFile))
+
+NodeEditor(
+    base.pixel2d,
+    customNodeJSONFiles=customNodeJSONFiles
+)
 
 base.run()

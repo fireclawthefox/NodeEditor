@@ -5,7 +5,9 @@ __license__ = """
 Simplified BSD (BSD 2-Clause) License.
 See License.txt or http://opensource.org/licenses/BSD-2-Clause for more info
 """
-
+from ast import *
+import astor
+import ast
 import logging
 
 import Panda3DNodeEditor
@@ -16,7 +18,7 @@ from Panda3DNodeEditor.NodeCore.Sockets.SocketBase import OUTSOCKET, INSOCKET
 from Panda3DNodeEditor.NodeCore.NodeConnector import NodeConnector
 
 class NodeManager:
-    def __init__(self, nodeViewNP=None, defaultNodeMap=None, customNodeMap=None):
+    def __init__(self, nodeViewNP=None, defaultNodeMap={}, defaultSocketMap={}, customNodeMap={}, customSocketMap={}):
         # Node Management
         self.nodeList = []
 
@@ -31,7 +33,15 @@ class NodeManager:
         self.nodeViewNP = nodeViewNP
 
         self.defaultNodeMap = defaultNodeMap
+        self.defaultSocketMap = defaultSocketMap
+
         self.customNodeMap = customNodeMap
+        self.customSocketMap = customSocketMap
+
+        self.socketMap = {
+            **self.defaultSocketMap,
+            **self.customSocketMap
+        }
 
     def cleanup(self):
         self.deselectAll()
@@ -396,7 +406,210 @@ class NodeManager:
 
                 self.processedConnections.remove(connector)
 
+    def getConnectionsOfNode(self, node):
+        """Returns a list of connections that are connected with the
+        given node"""
+        connections = []
+        for connector in self.connections:
+            for socket in node.inputList + node.outputList:
+                if connector.socketA is socket \
+                or connector.socketB is socket:
+                    connections.append(connector)
+        return connections
+
+    def getConnectionsOfSocket(self, socket):
+        """Returns a list of connections that the given socket is a part
+        of"""
+        connections = []
+        for connector in self.connections:
+            if connector.socketA is socket \
+            or connector.socketB is socket:
+                connections.append(connector)
+        return connections
+
     def updateConnections(self, args=None):
         """Update line positions of all connections"""
         for connector in self.connections:
             connector.update()
+
+    def run_logic(self, args=None):
+        print("PYTHON:")
+
+        """
+        FunctionDef(
+            name='myFunc',
+            args=arguments(
+                posonlyargs=[],
+                args=[arg(arg='a'), arg(arg='b')],
+                kwonlyargs=[],
+                kw_defaults=[],
+                defaults=[]),
+
+
+            arguments(
+                posonlyargs=[],
+                args=[arg(arg='a'), arg(arg='b')],
+                vararg=arg(arg='kw'),
+                kwonlyargs=[],
+                kw_defaults=[],
+                kwarg=arg(arg='kwargs')
+
+
+            body=[
+                Expr(value=Constant(value=Ellipsis))],
+            decorator_list=[])
+
+
+        Module(
+            body=[
+                Expr(
+                    value=Call(
+                        func=Name(
+                            id='print',
+                            ctx=Load()
+                        ),
+                        args=[
+                            Constant(value='Test')
+                        ],
+                        keywords=[]
+                    )
+                )
+            ],
+        type_ignores=[])
+
+
+        Call(func=Name(id='print', ctx=Load()),args={Arguments}, keywords=[])
+        """
+        """
+        Module([
+            FunctionDef(
+                name="MyFunc",
+                args=arguments(
+                    posonlyargs=[],
+                    args=[],
+                    kwonlyargs=[],
+                    kw_defaults=[],
+                    defaults=[]),
+                body=[
+                    Call(
+                        func=Name(
+                            id='print',
+                            ctx=Load()
+                        ),
+                        args=[arg("Test")],
+                        keywords=[]
+                    )],
+                decorator_list=[],
+                returns=None,
+                type_comment="")], [])
+        """
+
+        #astString = ast.dump(ast.parse("def myFunc(a, /, b, c:d, e=f, *g, **h):\n\tprint('Test')"))
+        astString = self.getASTEval()
+        print(astString)
+        astTree = eval(astString)
+        print(astString)
+        print(astTree)
+        print(ast.dump(astTree, indent=4))
+        ast.fix_missing_locations(astTree)
+        print(ast.unparse(astTree))
+        #print(self.getPythonScript())
+        code = astor.to_source(astTree)
+        print("PYTHON CODE:")
+        print("")
+        print(code)
+
+    def replacePlaceholders(self, node, text):
+        self.visitedNodes.append(node)
+        for socket in node.inputList:
+            placeholderTypes = ["arguments:", "*", "?"]
+            placeholders = [f"{socket.name}"]
+            for pt in placeholderTypes:
+                for placeholder in placeholders[:]:
+                    placeholders.append(f"{pt}{placeholder}")
+            for i in range(len(placeholders)):
+                placeholders[i] = f"{{{placeholders[i]}}}"
+
+            socketValue = socket.getValue()
+            replText = str(socketValue)
+            if type(socketValue) == str:
+                replText = f"\"{replText}\""
+            isStarred = False
+            isOptional = False
+            isArguments = False
+            for placeholder in placeholders:
+                if "*" in placeholder:
+                    placeholder.replace("*", "")
+                    isStarred = True
+                if "?" in placeholder:
+                    placeholder.replace("?", "")
+                    isOptional = True
+
+                if "arguments:" in placeholder:
+                    placeholder.replace("arguments:", "")
+                    isArguments = True
+
+                if placeholder not in text:
+                    continue
+
+                if isOptional \
+                and socket.getValue() == None:
+                    replText = ""
+                elif isArguments:
+                    strValues = []
+                    socketValue = socket.getValue()
+                    if socketValue is not None:
+                        if type(socketValue) == list:
+                            for value in socketValue:
+                                strValues.append(f"arg(\"{value}\")")
+                            replText = ",".join(strValues)
+                        else:
+                            replText = f"arg(\"{socketValue}\")"
+                elif isStarred:
+                    strValues = []
+                    if socket.getValue() is not None:
+                        for value in socket.getValue():
+                            strValues.append(str(value))
+                    replText = ",".join(strValues)
+
+                text = text.replace(placeholder, replText)
+                break
+
+        for socket in node.outputList:
+            placeholder = f"{{{socket.name}}}"
+            connections = self.getConnectionsOfSocket(socket)
+            if len(connections) == 0: continue
+            # since we only allow one connection per socket on those
+            # nodes, we can savely take the first
+            connector = connections[0]
+            otherSocket = None
+            if connector.socketA is socket:
+                otherNode = connector.socketB.node
+            else:
+                otherNode = connector.socketA.node
+            #if otherNode not in self.visitedNodes:
+            template = self.replacePlaceholders(otherNode, otherNode.customAttributes["py"])
+            #else:
+            #    template = otherNode.customAttributes["py"]
+            text = text.replace(placeholder, template)
+        return text
+
+    def getASTEval(self):
+        self.visitedNodes = []
+        for node in self.nodeList:
+            if "isRoot" in node.customAttributes \
+            and node.customAttributes["isRoot"]:
+                print("FOUND ROOT")
+                return self.replacePlaceholders(node, node.customAttributes["py"])
+
+    def getAst(self):
+        """Returns the Abstract Syntax Tree representation of this node"""
+
+        pyScript = self.getPythonScript()
+        try:
+            print(f"pasre:\n{pyScript}")
+            self.astRepr = ast.parse(pyScript, type_comments=True)
+        except:
+            pass
+
+        return self.astRepr

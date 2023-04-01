@@ -11,8 +11,10 @@ from direct.gui.DirectEntry import DirectEntry
 from direct.gui import DirectGuiGlobals as DGG
 from panda3d.core import TextNode
 
-class ListSocket(SocketBase):
+class DictionarySocket():
     def __init__(self, node, name):
+        self.numEntries = 0
+
         SocketBase.__init__(self, node, name)
 
         self.type = INSOCKET
@@ -47,6 +49,10 @@ class ListSocket(SocketBase):
         self.checkOthers()
 
     def getValue(self):
+        value = {}
+
+        for socket in self.dictSockets
+
         value = []
         for inSocket in self.node.inputList:
             if inSocket.name == self.name:

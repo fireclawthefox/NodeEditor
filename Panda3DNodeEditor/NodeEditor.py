@@ -23,11 +23,22 @@ from direct.directtools.DirectGeometry import LineNodePath
 from Panda3DNodeEditor.SaveScripts.SaveJSON import Save
 from Panda3DNodeEditor.LoadScripts.LoadJSON import Load
 from Panda3DNodeEditor.GUI.MainView import MainView
+from Panda3DNodeEditor.GUI.SearchBox import SearchBox
+from Panda3DNodeEditor.GUI.SearchBox import SearchBoxEntryData
 from Panda3DNodeEditor.NodeCore.NodeManager import NodeManager
 from Panda3DNodeEditor.NodeCore.Nodes.NodeJSONLoader import NodeJSONLoader
 
+
+from Panda3DNodeEditor.NodeCore.Sockets.BoolSocket import BoolSocket
+from Panda3DNodeEditor.NodeCore.Sockets.InSocket import InSocket
+from Panda3DNodeEditor.NodeCore.Sockets.NumericSocket import NumericSocket
+from Panda3DNodeEditor.NodeCore.Sockets.OptionSelectSocket import OptionSelectSocket
+from Panda3DNodeEditor.NodeCore.Sockets.TextSocket import TextSocket
+from Panda3DNodeEditor.NodeCore.Sockets.ArgumentsSocket import ArgumentsSocket
+from Panda3DNodeEditor.NodeCore.Sockets.ListSocket import ListSocket
+
 class NodeEditor(DirectObject):
-    def __init__(self, parent, customNodeMap={}, customExporterMap={}):
+    def __init__(self, parent, customNodeMap={}, customExporterMap={}, customSocketMap={}, customNodeJSONFiles=[]):
 
         DirectObject.__init__(self)
 
@@ -52,13 +63,36 @@ class NodeEditor(DirectObject):
         # NODE LOADING
         #
         self.nodeJSONLoader = NodeJSONLoader(
-            os.path.join(fn, "NodeCore", "Nodes", "pythonNodes.json"))
+            [os.path.join(fn, "NodeCore", "Nodes", "pythonNodes.json")],
+            customSocketMap)
         defaultNodeMap = self.nodeJSONLoader.getNodeMap()
+        defaultSocketMap = {
+            BoolSocket.__name__: BoolSocket,
+            InSocket.__name__: InSocket,
+            NumericSocket.__name__: NumericSocket,
+            OptionSelectSocket.__name__: OptionSelectSocket,
+            TextSocket.__name__: TextSocket,
+            ArgumentsSocket.__name__: ArgumentsSocket,
+            ListSocket.__name__: ListSocket
+        }
+
+        self.customNodeJSONLoader = NodeJSONLoader(
+            customNodeJSONFiles,
+            customSocketMap)
+        customJsonNodeMap = self.customNodeJSONLoader.getNodeMap()
+        customNodeMap = {
+            **customNodeMap,
+            **customJsonNodeMap}
 
         #
         # NODE MANAGER
         #
-        self.nodeMgr = NodeManager(self.viewNP, defaultNodeMap, customNodeMap)
+        self.nodeMgr = NodeManager(
+            self.viewNP,
+            defaultNodeMap,
+            defaultSocketMap,
+            customNodeMap,
+            customSocketMap)
 
         # Drag view
         self.mouseSpeed = 1
@@ -79,7 +113,68 @@ class NodeEditor(DirectObject):
         #
         self.mainView = MainView(parent, defaultNodeMap, customNodeMap, customExporterMap)
 
+        #
+        # SEARCH BOX
+        #
+        self.searchBox = SearchBox(50)
+        self.searchBox.hide()
+
+        # Search Box content
+        node_map = defaultNodeMap
+        node_map.update(customNodeMap)
+        nodes_entries = []
+        for node_name, node in node_map.items():
+            if type(node) == str:
+                nodes_entries.append(
+                    SearchBoxEntryData(
+                        name=node_name,
+                        tags=[],
+                        command=self.searchBoxSelect,
+                        extraArgs=[node]
+                    ))
+            elif type(node) == list:
+                nodes_entries.append(
+                    SearchBoxEntryData(
+                        name=node_name,
+                        tags=[],
+                        command=self.searchBoxSelect,
+                        extraArgs=[node[1]]
+                    ))
+            elif type(node) == dict:
+                tags = [node_name]
+                sub_entries = self.__addSubEntries(tags, node)
+                nodes_entries += sub_entries
+        self.searchBox.setEntries(nodes_entries)
+
+        #
+        # START EDITOR
+        #
         self.enable_editor()
+
+    def __addSubEntries(self, tags, node):
+        sub_entries = []
+        for sub_node_name, sub_node in node.items():
+            added_node = None
+            if type(sub_node) == list:
+                added_node = sub_node[1]
+            elif type(sub_node) == str:
+                added_node = sub_node
+            elif type(sub_node) == dict:
+                sub_tags = tags + [sub_node_name]
+                sub_sub_entries = self.__addSubEntries(sub_tags, sub_node)
+                sub_entries += sub_sub_entries
+                continue
+            else:
+                logging.error(f"Unknown type for sub-node: {type(sub_node)}")
+                continue
+            sub_entries.append(
+                SearchBoxEntryData(
+                        name=sub_node_name,
+                        tags=tags,
+                        command=self.searchBoxSelect,
+                        extraArgs=[added_node]
+                    ))
+        return sub_entries
 
     # ------------------------------------------------------------------
     # FRAME COMPATIBILITY FUNCTIONS
@@ -124,6 +219,8 @@ class NodeEditor(DirectObject):
     def enable_events(self):
         # Add nodes
         self.accept("addNode", self.nodeMgr.addNode)
+        self.accept("ShowNodeSearch", self.searchBox.show)
+        self.accept("f3", self.searchBox.show)
         # Remove nodes
         self.accept("NodeEditor_removeNode", self.nodeMgr.removeNode)
         self.accept("x", self.nodeMgr.removeNode)
@@ -142,6 +239,7 @@ class NodeEditor(DirectObject):
         # Refresh node logics
         self.accept("ctlr-r", self.nodeMgr.updateAllLeaveNodes)
         self.accept("NodeEditor_refreshNodes", self.nodeMgr.updateAllLeaveNodes)
+        self.accept("NodeEditor_run_logic", self.nodeMgr.run_logic)
 
         #
         # SOCKET RELATED EVENTS
@@ -503,3 +601,11 @@ class NodeEditor(DirectObject):
 
         # run until the task is manually stopped
         return task.cont
+
+    # ------------------------------------------------------------------
+    # SEARCH BOX
+    # ------------------------------------------------------------------
+    def searchBoxSelect(self, node):
+        print(node)
+        self.searchBox.hide()
+        base.messenger.send("addNode", [node])

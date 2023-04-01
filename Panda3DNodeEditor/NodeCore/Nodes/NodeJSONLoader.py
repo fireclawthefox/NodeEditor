@@ -25,34 +25,96 @@ class NodeMetadata:
     category: str = ""
     node: NodeBase = None
 
-class NodeJSONLoader(NodeBase):
-    def __init__(self, nodeDefinitionJSON):
+class NodeJSONLoader():
+    def __init__(self, nodeDefinitionJSONs, socketMap):
         self.nodeMetas = {}
-        self.jsonContent = None
-        try:
-            with open(nodeDefinitionJSON, 'r') as jsonFileContent:
-                self.jsonContent = json.load(jsonFileContent)
-        except Exception as e:
-            print("Couldn't load Node definition file {}".format(nodeDefinitionJSON))
-            print(e)
-            return
+        self.socketMap = socketMap
+        self.jsonContent = {}
+        for nodeDefinitionJSON in nodeDefinitionJSONs:
+            try:
+                with open(nodeDefinitionJSON, 'r') as jsonFileContent:
+                    jsonFileDict = json.load(jsonFileContent)
+                    self.jsonContent["Nodes"] = {
+                        **(self.jsonContent["Nodes"] if "Nodes" in self.jsonContent else {}),
+                        **(jsonFileDict["Nodes"] if "Nodes" in jsonFileDict else {})}
+            except Exception as e:
+                logging.exception(
+                    "Couldn't load Node definition file {}".format(nodeDefinitionJSON))
 
-        if self.jsonContent is None:
-            print("Problems reading file: {}".format(infile))
+        if len(self.jsonContent.keys()) <= 0:
+            logging.error("Problems reading definition file(s)")
             return
 
         for nodeID, definition in self.jsonContent["Nodes"].items():
             self.nodeMetas[nodeID] = NodeMetadata()
             self.nodeMetas[nodeID].name = definition["name"]
-            self.nodeMetas[nodeID].category = definition["category"]
+            self.nodeMetas[nodeID].category = definition["cat"]
+
+    def __categoryMap(self, category, categoryList, nodeName, nodeDef):
+        """Create a new category map part"""
+        if len(categoryList) == 0:
+            return {category: {nodeName: nodeDef}}
+        retMap = {}
+        retMap[category] = self.__categoryMap(
+            categoryList[0],
+            categoryList[1:],
+            nodeName,
+            nodeDef)
+        return retMap
+
+    def __updateMap(self, category, categoryList, nodeMapPart, nodeName, nodeDef):
+        """Update the category map part"""
+        if len(categoryList) == 0:
+            if category in nodeMapPart:
+                nodeMapPart[category][nodeName] = nodeDef
+            else:
+                nodeMapPart[category] = {nodeName: nodeDef}
+            return nodeMapPart
+        if category in nodeMapPart:
+            nodeMapPart[category] = self.__updateMap(
+                categoryList[0],
+                categoryList[1:],
+                nodeMapPart[category],
+                nodeName,
+                nodeDef
+            )
+        else:
+            nodeMapPart[category] = self.__categoryMap(
+                categoryList[0],
+                categoryList[1:],
+                nodeName,
+                nodeDef
+            )
+        return nodeMapPart
 
     def getNodeMap(self):
         nodeMap = {}
         for nodeID, meta in self.nodeMetas.items():
-            if meta.category in nodeMap:
-                nodeMap[meta.category][meta.name] = [nodeID, [self.loadNode, nodeID]]
+            categoryList = meta.category.split(",")
+
+            if categoryList[0] not in nodeMap.keys() and len(categoryList) > 1:
+                # deep hierarchy
+                nodeMap[categoryList[0]] = self.__categoryMap(
+                    categoryList[1],
+                    categoryList[2:],
+                    meta.name,
+                    [nodeID, [self.loadNode, nodeID]]
+                )
+            elif categoryList[0] not in nodeMap.keys():
+                # flat hierarchy
+                nodeMap[categoryList[0]] = {meta.name: [nodeID, [self.loadNode, nodeID]]}
+            elif len(categoryList) > 1:
+                # update deep hierarchy
+                nodeMap[categoryList[0]] = self.__updateMap(
+                    categoryList[1],
+                    categoryList[2:],
+                    nodeMap[categoryList[0]],
+                    meta.name,
+                    [nodeID, [self.loadNode, nodeID]]
+                )
             else:
-                nodeMap[meta.category] = {meta.name: [nodeID, [self.loadNode, nodeID]]}
+                # update flat hierarchy
+                nodeMap[categoryList[0]][meta.name] = [nodeID, [self.loadNode, nodeID]]
         return nodeMap
 
     def loadNode(self, nodeID, parent):
@@ -62,12 +124,13 @@ class NodeJSONLoader(NodeBase):
             nodeMeta = self.nodeMetas[nodeID]
             nodeMeta.node = NodeBase(nodeMeta.name, parent)
             nodeMeta.node.typeName = nodeID
-            nodeMeta.node.pyTemplate = definition["astRepresentation"]
+            if "extraAttr" in definition:
+                nodeMeta.node.customAttributes = definition["extraAttr"]
 
-            for outSocket in definition["outSockets"]:
+            for outSocket in definition["out"]:
                 nodeMeta.node.addOut(outSocket)
 
-            for inSocket in definition["inSockets"]:
+            for inSocket in definition["in"]:
                 st = inSocket["type"].lower()
                 socketType = None
                 extraArgs = None
@@ -88,6 +151,10 @@ class NodeJSONLoader(NodeBase):
                         extraArgs = [inSocket["argNames"]]
                 elif st == "list":
                     socketType = ListSocket
+                elif st in self.socketMap.keys():
+                    socketType = self.socketMap[st]
+                    if "extraArgs" in inSocket:
+                        extraArgs = inSocket["extraArgs"]
                 else:
                     logging.error(f"Unknown socket type {st} in {nodeMeta.name}!")
                     continue
@@ -99,9 +166,3 @@ class NodeJSONLoader(NodeBase):
                     extraArgs
                     )
             return nodeMeta.node
-
-    #def logic(self):
-    #    self.outputList[0].value = self.inputList[0].getValue()
-
-    #def getAst(self):
-    #    return ast.Constant(self.inputList[0].getValue())

@@ -33,8 +33,7 @@ class NodeBase(DirectObject):
         self.selected = False
         self.allowRecursion = False
         self.hasError = False
-        self.pyTemplate = ""
-        self.astRepr = None
+        self.customAttributes = {}
 
         # a special variable to store everything needed to re-create
         # this specific node
@@ -66,6 +65,7 @@ class NodeBase(DirectObject):
         """Add a new input socket of the given socket type"""
         if extraArgs is not None:
             inSocket = socketType(self, name, *extraArgs)
+            inSocket.extraArgs = extraArgs
         else:
             inSocket = socketType(self, name)
         inSocket.allowMultiConnect = allowMultiConnect
@@ -108,15 +108,21 @@ class NodeBase(DirectObject):
                 return True
         return False
 
-    def isLeaveNode(self):
+    def isLeaveNode(self, left=True):
         """Returns true if this is a leave node.
-        Leave nodes do not have any input connections. Either if no
-        input sockets are defined at all or none of the sockets is
-        connected."""
+        Leave nodes do not have any input (if left is set to True) or
+        output connections. Either if no sockets on that side are
+        defined at all or none of the sockets are connected."""
 
-        # check if we have any input sockets and if so if any of them is connected
-        for inSocket in self.inputList:
-            if inSocket.connected: return False
+        if left:
+            # check if we have any input sockets and if so if any of them are connected
+            socketList = self.inputList
+        else:
+            # check if we have any output sockets and if so if any of them are connected
+            socketList = self.outputList
+
+        for socket in socketList:
+            if socket.connected: return False
         return True
 
     def setError(self, hasError):
@@ -125,34 +131,14 @@ class NodeBase(DirectObject):
 
     def logic(self):
         """Run the logic of this node, process all in and output data.
-        This is a stub and should be overwritten by the derived classes"""
+        This is a stub and should be overwritten by the derived classes.
+        By default it will compile a list of values of all input sockets
+        and assigns that to all output sockets"""
         value = []
-        valueLists = []
         for inSocket in self.inputList:
             value.append(inSocket.getValue())
         for outSocket in self.outputList:
             outSocket.setValue(value)
-        #if self.inputList[0].value is None or self.inputList[1].value is None:
-        #    self.outputList[0].value = float("NaN")
-        #    return
-        #self.outputList[0].value = self.inputList[0].value + self.inputList[1].value
-
-    def replacePlaceholders(self, text):
-        for socket in self.inputList + self.outputList:
-            placeholder = f"{{{socket.name}}}"
-            if placeholder in text:
-                text = text.replace(placeholder, socket.node.getPy())
-        return text
-
-    def getPy(self):
-        return self.replacePlaceholders(self.pyTemplate)
-
-    def getAst(self):
-        """Returns the Abstract Syntax Tree representation of this node"""
-
-        self.astRepr = ast.parse(self.getPy(), type_comments=True)
-
-        return self.astRepr
 
     def update(self):
         """Show all sockets and resize the frame to fit all sockets in"""

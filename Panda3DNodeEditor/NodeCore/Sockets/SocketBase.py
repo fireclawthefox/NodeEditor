@@ -23,10 +23,11 @@ class SocketBase:
         self.height = 0.2
         self.type = None
         self.value = None
-        self.ast = None
         self.connected = False
         self.frame = None
         self.allowMultiConnect = False
+        # A JSON serializable list of extra arguments
+        self.extraArgs = []
 
     def remove(self):
         if self.frame is not None:
@@ -48,17 +49,10 @@ class SocketBase:
     def setValue(self, value):
         self.value = value
 
-    def getAst(self):
-        """Set the Abstract Syntax Tree representation for filling this
-        socket, whenever it is accessed"""
-        #THIS MAY NOT WORK SINCE WE DON'T HAVE THE CONNECTION
-        return self.ast
-
-    def setAst(self, newAst):
-        """Returns the Abstract Syntax Tree representation which should
-        be used when the node is accessed"""
-        #THIS MAY NOT WORK SINCE WE DON'T HAVE THE CONNECTION
-        self.ast = newAst
+    def hasCustomValue(self):
+        """Returns True if the value on this socket is set through the
+        socket itself and not through another node"""
+        return self.connected == False and self.value is not None
 
     def createPlug(self, parent):
         self.plug = DirectFrame(

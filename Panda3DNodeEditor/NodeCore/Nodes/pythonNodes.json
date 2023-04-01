@@ -2,10 +2,12 @@
     "Nodes":{
         "VALUE_STRING":{
             "name":"Text",
-            "category":"Value",
-            "astRepresentation":"\"{value}\"",
-            "outSockets":["Value"],
-            "inSockets":[
+            "cat":"Value",
+            "extraAttr":{
+                "py":"\"{value}\""
+            },
+            "out":["Value"],
+            "in":[
                 {
                     "name":"",
                     "type":"text"
@@ -14,10 +16,12 @@
         },
         "VALUE_BOOL":{
             "name":"Boolean",
-            "category":"Value",
-            "astRepresentation":"{value}",
-            "outSockets":["Value"],
-            "inSockets":[
+            "cat":"Value",
+            "extraAttr":{
+                "py":"{value}"
+            },
+            "out":["Value"],
+            "in":[
                 {
                     "name":"",
                     "type":"bool"
@@ -26,10 +30,12 @@
         },
         "VALUE_NUMERIC":{
             "name":"Numeric",
-            "category":"Value",
-            "astRepresentation":"{value}",
-            "outSockets":["Value"],
-            "inSockets":[
+            "cat":"Value",
+            "extraAttr":{
+                "py":"{value}"
+            },
+            "out":["Value"],
+            "in":[
                 {
                     "name":"",
                     "type":"num"
@@ -38,22 +44,40 @@
         },
         "VALUE_List":{
             "name":"List",
-            "category":"Value",
-            "astRepresentation":"{value}",
-            "outSockets":["Value"],
-            "inSockets":[
+            "cat":"Value",
+            "extraAttr":{
+                "py":"{value}"
+            },
+            "out":["Value"],
+            "in":[
                 {
                     "name":"Entry",
                     "type":"List"
                 }
             ]
         },
+        "VALUE_DICTIONARY":{
+            "name":"Dictionary",
+            "cat":"Value",
+            "extraAttr":{
+                "py":"{value}"
+            },
+            "out":["Value"],
+            "in":[
+                {
+                    "name":"Entry",
+                    "type":"Dict"
+                }
+            ]
+        }
         "OPERATOR_BOOL":{
             "name":"Boolean",
-            "category":"Operators",
-            "astRepresentation":"{Left} {Operator} {Right}",
-            "outSockets":["Out"],
-            "inSockets":[
+            "cat":"Operators",
+            "extraAttr":{
+                "py":"BoolOp(ast.{Operator}, [{Left}, {Right}])"
+            },
+            "out":["Out"],
+            "in":[
                 {
                     "name":"Operator",
                     "type":"option",
@@ -71,10 +95,12 @@
         },
         "OPERATOR_COMPARE":{
             "name":"Compare",
-            "category":"Operators",
-            "astRepresentation":"{Left} {Comparator} {Right}",
-            "outSockets":["Out"],
-            "inSockets":[
+            "cat":"Operators",
+            "extraAttr":{
+                "py":"Compare({Left}, [ast.{Comparator}], [{Right}])"
+            },
+            "out":["Out"],
+            "in":[
                 {
                     "name":"Comparator",
                     "type":"option",
@@ -103,10 +129,12 @@
         },
         "OPERATOR_GNERIC":{
             "name":"Generic",
-            "category":"Operators",
-            "astRepresentation":"{Left} {Operator} {Right}",
-            "outSockets":["Out"],
-            "inSockets":[
+            "cat":"Operators",
+            "extraAttr":{
+                "py":"BinOp({Left}, ast.{Operator}, {Right})"
+            },
+            "out":["Out"],
+            "in":[
                 {
                     "name":"Operator",
                     "type":"option",
@@ -138,10 +166,12 @@
         },
         "OPERATOR_UNARY":{
             "name":"Unary",
-            "category":"Operators",
-            "astRepresentation":"{Left} {operator} {Right}",
-            "outSockets":["Out"],
-            "inSockets":[
+            "cat":"Operators",
+            "extraAttr":{
+                "py":"UnaryOp(ast.{operator}, {Value})"
+            },
+            "out":["Out"],
+            "in":[
                 {
                     "name":"Operator",
                     "type":"option",
@@ -153,23 +183,21 @@
                     ]
                 },
                 {
-                    "name":"Left",
-                    "type":"in"
-                },
-                {
-                    "name":"Right",
+                    "name":"Value",
                     "type":"in"
                 }
             ]
         },
         "SIMPLE_OUTPUT":{
             "name":"Output",
-            "category":"Debugging",
-            "astRepresentation":"print({In})",
-            "outSockets":[
+            "cat":"Debugging",
+            "extraAttr":{
+                "py":"Call(func=Name(id='print', ctx=Load()),args=[{arguments:In}], keywords=[])"
+            },
+            "out":[
                 "Next"
             ],
-            "inSockets":[
+            "in":[
                 {
                     "name":"Call",
                     "type":"In"
@@ -182,10 +210,12 @@
         },
         "EXIT_RETURN":{
             "name":"Return",
-            "category":"Exits",
-            "astRepresentation":"return {Value}",
-            "outSockets":[],
-            "inSockets":[
+            "cat":"Exits",
+            "extraAttr":{
+                "py":"Return({?Value})"
+            },
+            "out":[],
+            "in":[
                 {
                     "name":"Call",
                     "type":"In"
@@ -198,10 +228,12 @@
         },
         "EXIT_BREAK":{
             "name":"Break",
-            "category":"Exits",
-            "astRepresentation":"break",
-            "outSockets":[],
-            "inSockets":[
+            "cat":"Exits",
+            "extraAttr":{
+                "py":"Break()"
+            },
+            "out":[],
+            "in":[
                 {
                     "name":"Call",
                     "type":"In"
@@ -210,10 +242,12 @@
         },
         "EXIT_CONTINUE":{
             "name":"Continue",
-            "category":"Exits",
-            "astRepresentation":"continue",
-            "outSockets":[],
-            "inSockets":[
+            "cat":"Exits",
+            "extraAttr":{
+                "py":"Continue()"
+            },
+            "out":[],
+            "in":[
                 {
                     "name":"Call",
                     "type":"In"
@@ -222,24 +256,44 @@
         },
         "EXIT_PASS":{
             "name":"Pass",
-            "category":"Exits",
-            "astRepresentation":"pass",
-            "outSockets":[],
-            "inSockets":[
+            "cat":"Exits",
+            "extraAttr":{
+                "py":"Pass()"
+            },
+            "out":[],
+            "in":[
                 {
                     "name":"Call",
                     "type":"In"
                 }
             ]
         },
-        "DEFINITION_FUNCTION":{
-            "name":"Function",
-            "category":"Entry",
-            "astRepresentation":"{Decorators}\ndef {name}({Arguments}){Returns}:",
-            "outSockets":[
+        "ENTRY_MODULE":{
+            "name":"Module",
+            "cat":"Base",
+            "extraAttr":{
+                "py":"Module([{Next}], [])",
+                "isRoot":true
+            },
+            "out":[
                 "Next"
             ],
-            "inSockets":[
+            "in":[]
+        },
+        "DEFINITION_FUNCTION":{
+            "name":"Function",
+            "cat":"Entry",
+            "extraAttr":{
+                "py":"FunctionDef(name={Name}, args=arguments(posonlyargs=[], args=[{?arguments:Arguments}], kwonlyargs=[], kw_defaults=[], defaults=[]), body=[{Next}], decorator_list=[{?*Decorators}], returns={Returns}, type_comment={Type Comment})"
+            },
+            "out":[
+                "Next"
+            ],
+            "in":[
+                {
+                    "name":"setup",
+                    "type":"In"
+                },
                 {
                     "name":"Name",
                     "type":"text"
@@ -264,12 +318,18 @@
         },
         "DEFINITION_CLASS":{
             "name":"Class",
-            "category":"Entry",
-            "astRepresentation":"{Decorators}\nclass {Name}({Bases}):",
-            "outSockets":[
+            "cat":"Entry",
+            "extraAttr":{
+                "py":"ClassDef(name={Name}, bases=[{?*Bases}], keywords=[], body=[{Next}], decorator_list=[{?*Decorators}])"
+            },
+            "out":[
                 "Next"
             ],
-            "inSockets":[
+            "in":[
+                {
+                    "name":"setup",
+                    "type":"In"
+                },
                 {
                     "name":"Name",
                     "type":"text"
@@ -290,14 +350,20 @@
         },
         "LOOP_FOR":{
             "name":"For",
-            "category":"Loops",
-            "astRepresentation":"",
-            "outSockets":[
+            "cat":"Loops",
+            "extraAttr":{
+                "py":"For(target=[{Target}],iter={Iterate Over},body=[{Do}],orelse=[{?Else}]), {?Next}"
+            },
+            "out":[
                 "Do",
                 "Else",
                 "Next"
             ],
-            "inSockets":[
+            "in":[
+                {
+                    "name":"Call",
+                    "type":"In"
+                },
                 {
                     "name":"Target",
                     "type":"Arguments"
@@ -314,14 +380,16 @@
         },
         "STATEMENT_IF":{
             "name":"If",
-            "category":"Statemnt",
-            "astRepresentation":"",
-            "outSockets":[
+            "cat":"Statemnt",
+            "extraAttr":{
+                "py":"IfExp({Test}, {Do}, {Else})"
+            },
+            "out":[
                 "Do",
                 "Else",
                 "Next"
             ],
-            "inSockets":[
+            "in":[
                 {
                     "name":"Test",
                     "type":"In"
@@ -330,12 +398,14 @@
         },
         "VARIABLE_GET":{
             "name":"Get Variable",
-            "category":"Variables",
-            "astRepresentation":"",
-            "outSockets":[
+            "cat":"Variables",
+            "extraAttr":{
+                "py":""
+            },
+            "out":[
                 "Value"
             ],
-            "inSockets":[
+            "in":[
                 {
                     "name":"Name",
                     "type":"text"
@@ -344,10 +414,12 @@
         },
         "VARIABLE_SET":{
             "name":"Set Variable",
-            "category":"Variables",
-            "astRepresentation":"",
-            "outSockets":[],
-            "inSockets":[
+            "cat":"Variables",
+            "extraAttr":{
+                "py":"Assign({Name}, {Value})"
+            },
+            "out":[],
+            "in":[
                 {
                     "name":"Name",
                     "type":"text"

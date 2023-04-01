@@ -39,16 +39,24 @@ class JSONTools:
     def __getSockets(self, socketList):
         sockets = []
         for socket in socketList:
-            if not socket.connected:
+            if socket.hasCustomValue():
                 # only store values entered by the user, not by other
                 # sockets as they should be recalculated on load
+                value = socket.getValue()
                 sockets.append({
                     "id":str(socket.socketID),
-                    "value":str(socket.getValue())
+                    "value":str(value) if value is not None else None,
+                    "name":str(socket.name),
+                    "socketType":type(socket).__name__,
+                    "allowMultiConnect":socket.allowMultiConnect,
+                    "extraArgs":socket.extraArgs
                 })
             else:
                 sockets.append({
                     "id":str(socket.socketID),
+                    "name":str(socket.name),
+                    "socketType":type(socket).__name__,
+                    "allowMultiConnect":socket.allowMultiConnect,
+                    "extraArgs":socket.extraArgs
                 })
         return sockets
-

@@ -38,12 +38,11 @@ class Load:
             with open(path, 'r') as infile:
                 fileContent = json.load(infile)
         except Exception as e:
-            print("Couldn't load project file {}".format(path))
-            print(e)
+            logging.exception(f"Couldn't load project file {path}")
             return
 
         if fileContent is None:
-            print("Problems reading file: {}".format(infile))
+            logging.error(f"Problems reading file: {infile}")
             return
 
         # 1. Create all nodes
@@ -60,11 +59,20 @@ class Load:
             node.setPos(eval(jsonNode["pos"]))
             for i in range(len(jsonNode["inSockets"])):
                 inSocket = jsonNode["inSockets"][i]
-                node.inputList[i].socketID = UUID(inSocket["id"])
+
+                if len(node.inputList) <= i:
+                    node.addIn(
+                        inSocket["name"],
+                        self.nodeMgr.socketMap[inSocket["socketType"]],
+                        inSocket["allowMultiConnect"],
+                        inSocket["extraArgs"])
                 if "value" in inSocket:
                     node.inputList[i].setValue(inSocket["value"])
+                node.inputList[i].socketID = UUID(inSocket["id"])
             for i in range(len(jsonNode["outSockets"])):
                 outSocket = jsonNode["outSockets"][i]
+                if len(node.outputList) == i:
+                    node.addOut(outSocket["name"])
                 node.outputList[i].socketID = UUID(outSocket["id"])
             node.show()
             newNodes.append(node)
@@ -96,7 +104,6 @@ class Load:
                     socketA = socket
                 elif socket.socketID == UUID(jsonConnection["socketB_ID"]):
                     socketB = socket
-
             self.nodeMgr.connectPlugs(socketA, socketB)
 
         # 3. Run logic from all leave nodes down to the end

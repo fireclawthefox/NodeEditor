@@ -18,7 +18,6 @@ class MainView():
         #
         # LAYOUT SETUP
         #
-
         # the box everything get's added to
         self.main_box = DirectBoxSizer(
             frameColor=(0,0,0,0),
