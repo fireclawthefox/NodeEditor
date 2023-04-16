@@ -54,6 +54,8 @@ class NodeBase(DirectObject):
             frameColor=self.normalColor,
             frameSize=(self.left, self.right, -.6, 0.2),
             parent=parent)
+        self.frame.setBin("fixed", 10)
+
 
         self.setupBind()
         self.hide()

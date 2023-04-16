@@ -28,6 +28,7 @@ class NodeConnector:
         self.line.moveTo(self.socketA.plug.getPos(ShowBaseGlobal.aspect2d))
         self.line.drawTo(self.socketB.plug.getPos(ShowBaseGlobal.aspect2d))
         self.line.create()
+        self.line.setBin("fixed", 1)
 
     def has(self, socket):
         """Returns True if one of the sockets this connector connects is
