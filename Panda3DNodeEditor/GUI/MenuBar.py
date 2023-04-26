@@ -95,7 +95,8 @@ class MenuBar():
                 sub_entries = self.__addSubEntries(node)
                 self.nodes_entries.append(
                     DirectMenuItemSubMenu(
-                        node_name, sub_entries))
+                        node_name + " >",
+                        sub_entries))
 
         # Nodes Menu
         self.nodes = self.__create_menu_item("Nodes", self.nodes_entries)

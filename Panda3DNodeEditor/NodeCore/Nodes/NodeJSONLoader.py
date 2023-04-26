@@ -18,6 +18,7 @@ from Panda3DNodeEditor.NodeCore.Sockets.OptionSelectSocket import OptionSelectSo
 from Panda3DNodeEditor.NodeCore.Sockets.TextSocket import TextSocket
 from Panda3DNodeEditor.NodeCore.Sockets.ArgumentsSocket import ArgumentsSocket
 from Panda3DNodeEditor.NodeCore.Sockets.ListSocket import ListSocket
+from Panda3DNodeEditor.NodeCore.Sockets.DictionarySocket import DictionarySocket
 
 @dataclass
 class NodeMetadata:
@@ -92,7 +93,10 @@ class NodeJSONLoader():
         for nodeID, meta in self.nodeMetas.items():
             categoryList = meta.category.split(",")
 
-            if categoryList[0] not in nodeMap.keys() and len(categoryList) > 1:
+            if categoryList[0] == "" and len(categoryList) == 1:
+                # no hierarchy
+                nodeMap[meta.name] = [nodeID, [self.loadNode, nodeID]]
+            elif categoryList[0] not in nodeMap.keys() and len(categoryList) > 1:
                 # deep hierarchy
                 nodeMap[categoryList[0]] = self.__categoryMap(
                     categoryList[1],
@@ -151,6 +155,8 @@ class NodeJSONLoader():
                         extraArgs = [inSocket["argNames"]]
                 elif st == "list":
                     socketType = ListSocket
+                elif st == "dict":
+                    socketType = DictionarySocket
                 elif st in self.socketMap.keys():
                     socketType = self.socketMap[st]
                     if "extraArgs" in inSocket:
