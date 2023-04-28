@@ -38,7 +38,14 @@ from Panda3DNodeEditor.NodeCore.Sockets.ArgumentsSocket import ArgumentsSocket
 from Panda3DNodeEditor.NodeCore.Sockets.ListSocket import ListSocket
 
 class NodeEditor(DirectObject):
-    def __init__(self, parent, customNodeMap={}, customExporterMap={}, customSocketMap={}, customNodeJSONFiles=[]):
+    def __init__(self,
+            parent,
+            defaultNodeMap={},
+            defaultNodeJSONFiles=[],
+            customNodeMap={},
+            customExporterMap={},
+            customSocketMap={},
+            customNodeJSONFiles=[]):
 
         DirectObject.__init__(self)
 
@@ -63,9 +70,12 @@ class NodeEditor(DirectObject):
         # NODE LOADING
         #
         self.nodeJSONLoader = NodeJSONLoader(
-            [os.path.join(fn, "NodeCore", "Nodes", "pythonNodes.json")],
+            defaultNodeJSONFiles,
             customSocketMap)
-        defaultNodeMap = self.nodeJSONLoader.getNodeMap()
+        defaultNodeMap = {
+            **defaultNodeMap,
+            **self.nodeJSONLoader.getNodeMap()
+        }
         defaultSocketMap = {
             BoolSocket.__name__: BoolSocket,
             InSocket.__name__: InSocket,

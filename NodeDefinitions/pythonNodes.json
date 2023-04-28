@@ -69,7 +69,7 @@
                     "type":"Dict"
                 }
             ]
-        }
+        },
         "OPERATOR_BOOL":{
             "name":"Boolean",
             "cat":"Operators",
@@ -348,6 +348,26 @@
                 }
             ]
         },
+        "CALL":{
+            "name":"Call Function",
+            "cat":"",
+            "extraAttr":{
+                "py":"Call(func={Name},args=[{Arguments}]), {?Next}"
+            },
+            "out":[
+                "Next"
+            ],
+            "in":[
+                {
+                    "name":"Name",
+                    "type":"text"
+                },
+                {
+                    "name":"Arguments",
+                    "type":"Arguments"
+                }
+            ]
+        },
         "LOOP_FOR":{
             "name":"For",
             "cat":"Loops",
@@ -361,8 +381,8 @@
             ],
             "in":[
                 {
-                    "name":"Call",
-                    "type":"In"
+                    "name":"Name",
+                    "type":"text"
                 },
                 {
                     "name":"Target",

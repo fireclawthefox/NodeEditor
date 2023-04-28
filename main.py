@@ -54,13 +54,14 @@ fn = Filename.fromOsSpecific(os.path.dirname(__file__))
 fn.makeTrueCase()
 
 customNodeJSONFiles = []
-for root, dirs, files in os.walk(os.path.join(fn, "panda3d_definitions")):
+for root, dirs, files in os.walk(os.path.join(fn, "NodeDefinitions", "panda3d_definitions")):
     for jsonFile in files:
         if not jsonFile.endswith(".json"): continue
         customNodeJSONFiles.append(os.path.join(root, jsonFile))
 
 NodeEditor(
-    base.pixel2d,
+    parent=base.pixel2d,
+    defaultNodeJSONFiles=[os.path.join(fn, "NodeDefinitions", "pythonNodes.json")],
     customNodeJSONFiles=customNodeJSONFiles
 )
 

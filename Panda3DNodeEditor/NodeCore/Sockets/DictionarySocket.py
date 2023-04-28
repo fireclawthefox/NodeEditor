@@ -14,6 +14,13 @@ from panda3d.core import TextNode
 class DictionarySocket():
     def __init__(self, node, name):
         self.numEntries = 0
+        self.node = node
+        self.name = name
+        self.socketDict = {}
+        self.height = 0.4
+        self.connected = False
+        self.frame = None
+        self.allowMultiConnect = False
 
         SocketBase.__init__(self, node, name)
 
@@ -27,13 +34,11 @@ class DictionarySocket():
             parent=node.frame,
         )
 
-        SocketBase.createPlug(self, self.frame)
-
         self.text = DirectLabel(
             frameColor=(0, 0, 0, 0),
-            frameSize=(0, 1, -self.height, 0),
+            frameSize=(0, 1, -0.2, 0),
             scale=(1, 1, 1),
-            text=self.name,
+            text="Dictionary",
             text_align=TextNode.A_left,
             text_scale=(0.1, 0.1),
             text_pos=(0.1, -0.02),
@@ -44,6 +49,38 @@ class DictionarySocket():
 
         self.resize(1)
 
+    def createKeyValuePairSocket(self):
+        frame = DirectFrame(
+            frameColor=(0.25, 0.25, 0.25, 1),
+            frameSize=(-1, 0, -0.4, 0),
+            pos=(0,0,-0.2*(self.numEntries+1)),
+            parent=self.frame,
+        )
+
+        text = DirectLabel(
+            frameColor=(0, 0, 0, 0),
+            frameSize=(0, 1, -self.height, 0),
+            scale=(1, 1, 1),
+            text=self.name,
+            text_align=TextNode.A_left,
+            text_scale=(0.1, 0.1),
+            text_pos=(0.1, -0.02),
+            text_fg=(1, 1, 1, 1),
+            text_bg=(0, 0, 0, 0),
+            parent=frame,
+        )
+
+        keySocket = SocketBase(self.node, )
+        keySocket.createPlug(frame)
+        valueSocket = SocketBase(self.node, )
+        valueSocket.createPlug(frame)
+
+        self.socketDict[keySocket] = valueSocket
+
+        self.frame["frameSize"] = (-1, 0, -0.4 * (self.numEntries * 2) - 0.4, 0)
+        self.numEntries += 1
+        self.node.update()
+
     def setValue(self, value):
         self.value = value
         self.checkOthers()
@@ -51,7 +88,8 @@ class DictionarySocket():
     def getValue(self):
         value = {}
 
-        for socket in self.dictSockets
+        for socket in self.dictSockets:
+            pass
 
         value = []
         for inSocket in self.node.inputList:
