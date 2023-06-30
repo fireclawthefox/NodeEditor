@@ -1,0 +1,1 @@
+{"Nodes": {"run": {"name": "run", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(run, [])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}]}, "inspect": {"name": "inspect", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(inspect, [anObject])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "anObject", "type": "In"}]}}}

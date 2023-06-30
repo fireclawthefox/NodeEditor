@@ -1,0 +1,1 @@
+{"Nodes": {"LevelLoader_initLoader": {"name": "initLoader", "cat": "Panda3D,direct,LevelLoader", "extraAttr": {"py": "Call(Attribute({self}, initLoader), [])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}]}}}

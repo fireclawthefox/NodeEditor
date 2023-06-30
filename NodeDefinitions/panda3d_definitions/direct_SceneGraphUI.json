@@ -1,0 +1,1 @@
+{"Nodes": {"SceneGraphUI_populateExtraMenu": {"name": "populateExtraMenu", "cat": "Panda3D,direct,SceneGraphUI", "extraAttr": {"py": "Call(Attribute({self}, populateExtraMenu), [])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}]}}}

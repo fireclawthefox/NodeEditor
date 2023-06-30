@@ -1,0 +1,1 @@
+{"Nodes": {"DirectCheckBox___init__": {"name": "DirectCheckBox", "cat": "Panda3D,direct,DirectCheckBox", "extraAttr": {"py": "Call(Attribute({self}, DirectCheckBox), [parent])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}, {"name": "parent", "type": "In"}]}}}

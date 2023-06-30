@@ -1,0 +1,1 @@
+{"Nodes": {"getLargeBlobPath": {"name": "getLargeBlobPath", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(getLargeBlobPath, [])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}]}}}

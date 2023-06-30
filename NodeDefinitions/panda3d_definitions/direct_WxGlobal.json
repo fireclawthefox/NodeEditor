@@ -1,0 +1,1 @@
+{"Nodes": {"spawnWxLoop": {"name": "spawnWxLoop", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(spawnWxLoop, [])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}]}}}

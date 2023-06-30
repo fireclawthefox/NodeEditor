@@ -1,0 +1,1 @@
+{"Nodes": {"DistributedActor___init__": {"name": "DistributedActor", "cat": "Panda3D,direct,DistributedActor", "extraAttr": {"py": "Call(Attribute({self}, DistributedActor), [cr])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}, {"name": "cr", "type": "In"}]}}}

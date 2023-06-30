@@ -1,0 +1,1 @@
+{"Nodes": {"verify": {"name": "verify", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(verify, [assertion])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "assertion", "type": "In"}]}}}

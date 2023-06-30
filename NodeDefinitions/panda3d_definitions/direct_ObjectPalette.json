@@ -1,0 +1,1 @@
+{"Nodes": {"ObjectPalette___init__": {"name": "ObjectPalette", "cat": "Panda3D,direct,ObjectPalette", "extraAttr": {"py": "Call(Attribute({self}, ObjectPalette), [])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}]}}}

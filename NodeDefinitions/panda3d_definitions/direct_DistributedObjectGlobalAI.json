@@ -1,0 +1,1 @@
+{"Nodes": {"DistributedObjectGlobalAI_announceGenerate": {"name": "announceGenerate", "cat": "Panda3D,direct,DistributedObjectGlobalAI", "extraAttr": {"py": "Call(Attribute({self}, announceGenerate), [])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}]}}}

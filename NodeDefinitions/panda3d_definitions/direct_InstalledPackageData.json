@@ -1,0 +1,1 @@
+{"Nodes": {"InstalledPackageData___init__": {"name": "InstalledPackageData", "cat": "Panda3D,direct,InstalledPackageData", "extraAttr": {"py": "Call(Attribute({self}, InstalledPackageData), [package,dirnode])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}, {"name": "package", "type": "In"}, {"name": "dirnode", "type": "In"}]}}}

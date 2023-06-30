@@ -1,0 +1,1 @@
+{"Nodes": {"MessengerLeakDetector_run": {"name": "run", "cat": "Panda3D,direct,MessengerLeakDetector", "extraAttr": {"py": "Call(Attribute({self}, run), [])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}]}}}

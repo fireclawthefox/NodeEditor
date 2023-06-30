@@ -1,0 +1,1 @@
+{"Nodes": {"InstalledHostData___init__": {"name": "InstalledHostData", "cat": "Panda3D,direct,InstalledHostData", "extraAttr": {"py": "Call(Attribute({self}, InstalledHostData), [host,dirnode])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}, {"name": "host", "type": "In"}, {"name": "dirnode", "type": "In"}]}}}

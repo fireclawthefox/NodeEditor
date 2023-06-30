@@ -1,0 +1,1 @@
+{"Nodes": {"spawnTkLoop": {"name": "spawnTkLoop", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(spawnTkLoop, [])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}]}}}

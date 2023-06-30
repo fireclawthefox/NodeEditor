@@ -1,0 +1,1 @@
+{"Nodes": {"getBlend": {"name": "getBlend", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(getBlend, [blendType])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "blendType", "type": "In"}]}}}

@@ -1,0 +1,1 @@
+{"Nodes": {"connect": {"name": "connect", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(connect, [])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}]}}}

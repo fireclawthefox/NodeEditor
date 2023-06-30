@@ -1,0 +1,1 @@
+{"Nodes": {"giveNotify": {"name": "giveNotify", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(giveNotify, [cls])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "cls", "type": "In"}]}}}

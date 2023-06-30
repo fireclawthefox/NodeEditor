@@ -1,0 +1,1 @@
+{"Nodes": {"install": {"name": "install", "cat": "Panda3D,direct", "extraAttr": {"py": ["Call(install, [log,upload])"]}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "log", "type": "In"}, {"name": "upload", "type": "In"}]}}}

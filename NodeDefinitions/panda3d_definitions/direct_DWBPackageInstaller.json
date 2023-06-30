@@ -1,0 +1,1 @@
+{"Nodes": {"DWBPackageInstaller___init__": {"name": "DWBPackageInstaller", "cat": "Panda3D,direct,DWBPackageInstaller", "extraAttr": {"py": "Call(Attribute({self}, DWBPackageInstaller), [appRunner,parent])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}, {"name": "appRunner", "type": "In"}, {"name": "parent", "type": "In"}]}}}

@@ -1,0 +1,1 @@
+{"Nodes": {"TimeManagerAI_requestServerTime": {"name": "requestServerTime", "cat": "Panda3D,direct,TimeManagerAI", "extraAttr": {"py": "Call(Attribute({self}, requestServerTime), [context])"}, "out": ["Next", "value"], "in": [{"name": "Call", "type": "In"}, {"name": "self", "type": "In"}, {"name": "context", "type": "In"}]}}}
