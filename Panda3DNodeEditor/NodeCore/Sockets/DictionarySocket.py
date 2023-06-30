@@ -47,6 +47,8 @@ class DictionarySocket():
             parent=self.frame,
         )
 
+        #TODO: Add a button to add new entries?
+
         self.resize(1)
 
     def createKeyValuePairSocket(self):
@@ -70,9 +72,9 @@ class DictionarySocket():
             parent=frame,
         )
 
-        keySocket = SocketBase(self.node, )
+        keySocket = SocketBase(self.node, "Key")
         keySocket.createPlug(frame)
-        valueSocket = SocketBase(self.node, )
+        valueSocket = SocketBase(self.node, "Value")
         valueSocket.createPlug(frame)
 
         self.socketDict[keySocket] = valueSocket
@@ -80,6 +82,19 @@ class DictionarySocket():
         self.frame["frameSize"] = (-1, 0, -0.4 * (self.numEntries * 2) - 0.4, 0)
         self.numEntries += 1
         self.node.update()
+
+    def remove(self):
+        if self.frame is not None:
+            self.frame.removeNode()
+
+    def enable(self):
+        """Enable any elements on the node"""
+        pass
+
+    def disable(self):
+        """Disable any elements on the node that could possbily interfer with
+        the mouse watcher and the drag/drop feature"""
+        pass
 
     def setValue(self, value):
         self.value = value
