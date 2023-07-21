@@ -3,125 +3,141 @@
 
 # This file was created using the DirectGUI Designer
 
+from uuid import uuid4
 from Panda3DNodeEditor.NodeCore.Sockets.SocketBase import SocketBase, INSOCKET
 
 from direct.gui.DirectFrame import DirectFrame
 from direct.gui.DirectLabel import DirectLabel
 from direct.gui.DirectEntry import DirectEntry
+from direct.gui.DirectButton import DirectButton
 from direct.gui import DirectGuiGlobals as DGG
+from DirectGuiExtension import DirectGuiHelper as DGH
 from panda3d.core import TextNode
+from DirectGuiExtension.DirectBoxSizer import DirectBoxSizer
 
-class DictionarySocket():
+class DictionarySocket(SocketBase):
     def __init__(self, node, name):
-        self.numEntries = 0
-        self.node = node
-        self.name = name
-        self.socketDict = {}
-        self.height = 0.4
-        self.connected = False
-        self.frame = None
-        self.allowMultiConnect = False
-
         SocketBase.__init__(self, node, name)
+        self.numEntries = 0
+        self.height = 0.4
 
         self.type = INSOCKET
 
-        self.frame = None
-
         self.frame = DirectFrame(
             frameColor=(0.25, 0.25, 0.25, 1),
-            frameSize=(-1, 0, -self.height, 0),
+            frameSize=(-1, 0, -self.height, 0.2),
             parent=node.frame,
         )
+
+        self.dictPlugsHolderFrame = DirectBoxSizer(
+            self.frame,
+            orientation=DGG.VERTICAL,
+            frameColor=(0,0,0,0))
 
         self.text = DirectLabel(
             frameColor=(0, 0, 0, 0),
             frameSize=(0, 1, -0.2, 0),
             scale=(1, 1, 1),
-            text="Dictionary",
+            text=f"{name} Dictionary",
             text_align=TextNode.A_left,
             text_scale=(0.1, 0.1),
-            text_pos=(0.1, -0.02),
+            text_pos=(0.1, 0.035),
             text_fg=(1, 1, 1, 1),
             text_bg=(0, 0, 0, 0),
             parent=self.frame,
         )
 
-        #TODO: Add a button to add new entries?
+        self.btnAddEntry = DirectButton(
+            text="Add pair",
+            scale=0.1,
+            text_fg=(1, 1, 1, 1),
+            text_bg=(0, 0, 0, 0),
+            frameColor=(0.35, 0.35, 0.35, 1),
+            pos=(0.5, 0, -0.1),
+            parent=self.frame,
+            relief=DGG.FLAT,
+            command=self.addEntry,
+        )
+
+        self.createKeyValuePairSocket()
 
         self.resize(1)
 
+    def addEntry(self):
+        self.createKeyValuePairSocket()
+
+    def removeEntry(self, plug):
+        plugIDData = plug.plugID.split(":")
+        plugPairID = plugIDData[0]
+
+        hasRemoved = False
+        for myPlug in self.plugs[:]:
+            myPlugIDData = myPlug.plugID.split(":")
+            myPlugPairID = myPlugIDData[0]
+            if myPlugPairID == plugPairID:
+                self.dictPlugsHolderFrame.removeItem(
+                    myPlug.plugWidget,
+                    False)
+                myPlug.removePlug()
+                self.plugs.remove(myPlug)
+                hasRemoved = True
+
+        if hasRemoved:
+            self.numEntries -= 1
+            self.btnAddEntry.setPos(
+                self.btnAddEntry.getX(),
+                self.btnAddEntry.getY(),
+                self.btnAddEntry.getZ()+0.2)
+            self.updateFrameSize()
+
     def createKeyValuePairSocket(self):
-        frame = DirectFrame(
-            frameColor=(0.25, 0.25, 0.25, 1),
-            frameSize=(-1, 0, -0.4, 0),
-            pos=(0,0,-0.2*(self.numEntries+1)),
-            parent=self.frame,
-        )
+        pairID = str(uuid4())
+        self.createPlug(self.frame, [pairID, "key"], removable=True)
+        self.createPlug(self.frame, [pairID, "value"])
 
-        text = DirectLabel(
-            frameColor=(0, 0, 0, 0),
-            frameSize=(0, 1, -self.height, 0),
-            scale=(1, 1, 1),
-            text=self.name,
-            text_align=TextNode.A_left,
-            text_scale=(0.1, 0.1),
-            text_pos=(0.1, -0.02),
-            text_fg=(1, 1, 1, 1),
-            text_bg=(0, 0, 0, 0),
-            parent=frame,
-        )
+        self.dictPlugsHolderFrame.addItem(self.plugs[-2].plugWidget)
+        self.dictPlugsHolderFrame.addItem(self.plugs[-1].plugWidget)
 
-        keySocket = SocketBase(self.node, "Key")
-        keySocket.createPlug(frame)
-        valueSocket = SocketBase(self.node, "Value")
-        valueSocket.createPlug(frame)
-
-        self.socketDict[keySocket] = valueSocket
-
-        self.frame["frameSize"] = (-1, 0, -0.4 * (self.numEntries * 2) - 0.4, 0)
         self.numEntries += 1
+        self.btnAddEntry.setPos(
+            self.btnAddEntry.getX(),
+            self.btnAddEntry.getY(),
+            self.btnAddEntry.getZ()-0.2)
+        self.updateFrameSize()
+
+    def updateFrameSize(self):
+        self.height = 0.2 * self.numEntries + 0.2
+        self.frame["frameSize"] = (-1, 0, -self.height, 0.2)
+        self.dictPlugsHolderFrame.refresh()
         self.node.update()
+        self.resize(1)
 
-    def remove(self):
-        if self.frame is not None:
-            self.frame.removeNode()
-
-    def enable(self):
-        """Enable any elements on the node"""
-        pass
-
-    def disable(self):
-        """Disable any elements on the node that could possbily interfer with
-        the mouse watcher and the drag/drop feature"""
-        pass
-
-    def setValue(self, value):
-        self.value = value
-        self.checkOthers()
+    def setValue(self, plug, value):
+        SocketBase.setValue(self, plug, value)
+        print("SET VALUE TO:", value)
+        print(plug.value)
+        print("HAS IT?")
+        self.value = self.getValue()
 
     def getValue(self):
-        value = {}
+        tempdict = {}
+        for plug in self.plugs:
+            plugIDData = plug.plugID.split(":")
+            plugPairID = plugIDData[0]
+            plugPairPart = plugIDData[1]
+            if plugPairID in tempdict.keys():
+                tempdict[plugPairID][plugPairPart] = plug.value
+            else:
+                tempdict[plugPairID] = {plugPairPart:plug.value}
 
-        for socket in self.dictSockets:
-            pass
+        print(tempdict)
 
-        value = []
-        for inSocket in self.node.inputList:
-            if inSocket.name == self.name:
-                value.append(self.value)
-        # make sure the last empty entry is not added to the list
-        return value[:-1]
-
-    def checkOthers(self):
-        for inSocket in self.node.inputList[:]:
-            # remove all non-connected sockets with this name
-            if inSocket.name == self.name \
-            and inSocket.value is None:
-                self.node.removeIn(inSocket)
-        # Make sure we always have one new socket to extend the list
-        self.node.addIn(self.name, ListSocket)
-        self.node.update()
+        retValue = {}
+        for key, pairs in tempdict.items():
+            if pairs["key"] is None:
+                continue
+            retValue[pairs["key"]] = pairs["value"]
+        return retValue
 
     def show(self, z, left):
         if self.frame is None:
@@ -132,5 +148,5 @@ class DictionarySocket():
     def resize(self, newWidth):
         if self.frame is None:
             return
-        self.frame["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
-        self.text["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
+        self.frame["frameSize"] = (0, newWidth, -self.height, 0.1)
+        self.text["frameSize"] = (0, newWidth, -self.height, 0.1)

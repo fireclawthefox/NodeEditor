@@ -10,10 +10,12 @@ from direct.showbase import ShowBaseGlobal
 from direct.directtools.DirectGeometry import LineNodePath
 
 class NodeConnector:
-    def __init__(self, socketA, socketB):
+    def __init__(self, plugA, plugB):
         self.connectorID = uuid4()
-        self.socketA = socketA
-        self.socketB = socketB
+        self.plugA = plugA
+        self.socketA = plugA.socket
+        self.plugB = plugB
+        self.socketB = plugB.socket
         self.line = LineNodePath(ShowBaseGlobal.aspect2d, thickness=2, colorVec=(0.8,0.8,0.8,1))
         self.draw()
 
@@ -25,8 +27,8 @@ class NodeConnector:
         self.draw()
 
     def draw(self):
-        self.line.moveTo(self.socketA.plug.getPos(ShowBaseGlobal.aspect2d))
-        self.line.drawTo(self.socketB.plug.getPos(ShowBaseGlobal.aspect2d))
+        self.line.moveTo(self.plugA.getPos(ShowBaseGlobal.aspect2d))
+        self.line.drawTo(self.plugB.getPos(ShowBaseGlobal.aspect2d))
         self.line.create()
         self.line.setBin("fixed", 1)
 
@@ -35,14 +37,21 @@ class NodeConnector:
         the given socket"""
         return socket == self.socketA or socket == self.socketB
 
+    def hasPlug(self, plug):
+        return plug == self.plugA or plug == self.plugB
+
     def connects(self, a, b):
         """Returns True if this connector connects socket a and b"""
         return (a == self.socketA or a == self.socketB) and (b == self.socketA or b == self.socketB)
 
+    def connectsPlugs(self, a, b):
+        """Returns True if this connector connects plug a and b"""
+        return (a == self.plugA or a == self.plugB) and (b == self.plugA or b == self.plugB)
+
     def disconnect(self):
         self.line.reset()
-        self.socketA.setConnected(False)
-        self.socketB.setConnected(False)
+        self.socketA.setConnected(False, self.plugA)
+        self.socketB.setConnected(False, self.plugB)
 
     def setChecked(self):
         self.line.setColor(0,1,0,1)

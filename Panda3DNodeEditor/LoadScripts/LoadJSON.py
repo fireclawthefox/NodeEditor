@@ -58,6 +58,7 @@ class Load:
             node.nodeID = UUID(jsonNode["id"])
             node.setPos(eval(jsonNode["pos"]))
             for i in range(len(jsonNode["inSockets"])):
+                # Create all input sockets of this node
                 inSocket = jsonNode["inSockets"][i]
 
                 if len(node.inputList) <= i:
@@ -66,13 +67,23 @@ class Load:
                         self.nodeMgr.socketMap[inSocket["socketType"]],
                         inSocket["allowMultiConnect"],
                         inSocket["extraArgs"])
+                curSocket = node.inputList[i]
+                # create sockets' plugs and set their IDs
+                for plugIdx in range(inSocket["plugs"]):
+                    if plugIdx >= len(curSocket.plugs):
+                        # we need to add a plug
+                        curSocket.createPlug(curSocket.frame)
+                    curSocket.plugs[plugIdx].plugID = inSocket["plugs"][plugIdx]["id"]
+                # set the sockets value if it has any
                 if "value" in inSocket:
-                    node.inputList[i].setValue(inSocket["value"])
-                node.inputList[i].socketID = UUID(inSocket["id"])
+                    curSocket.setValue(inSocket["value"])
+                # set the sockets ID
+                curSocket.socketID = UUID(inSocket["id"])
             for i in range(len(jsonNode["outSockets"])):
                 outSocket = jsonNode["outSockets"][i]
                 if len(node.outputList) == i:
                     node.addOut(outSocket["name"])
+                node.outputList[i].plugs[0].plugID = outSocket["plugs"][0]["id"]
                 node.outputList[i].socketID = UUID(outSocket["id"])
             node.show()
             newNodes.append(node)

@@ -55,8 +55,9 @@ class NumericSocket(SocketBase):
 
         self.resize(1)
 
-    def setValue(self, value):
+    def setValue(self, plug, value):
         self.spinBox.setValue(value)
+        SocketBase.setValue(plug, value)
 
     def getValue(self):
         return self.spinBox.getValue()
@@ -69,7 +70,7 @@ class NumericSocket(SocketBase):
         self.frame["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
         self.text["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
 
-    def setConnected(self, connected):
+    def setConnected(self, connected, plug):
         if connected:
             self.spinBox["state"] = DGG.DISABLED
             self.spinBox.incButton["state"] = DGG.DISABLED
@@ -80,4 +81,4 @@ class NumericSocket(SocketBase):
             self.spinBox.incButton["state"] = DGG.NORMAL
             self.spinBox.decButton["state"] = DGG.NORMAL
             self.spinBox.valueEntry["state"] = DGG.NORMAL
-        self.connected = connected
+        SocketBase.setConnected(self, connected, plug)

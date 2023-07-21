@@ -45,13 +45,17 @@ class TextSocket(SocketBase):
             borderWidth=(0.1,0.1),
             width=10,
             parent=self.frame,
-            command=self.updateConnectedNodes,
-            focusOutCommand=self.updateConnectedNodes,
+            command=self.unfocus,
+            focusOutCommand=self.update,
             overflow=True,
             state=DGG.DISABLED)
         self.textfield.setScale(0.1)
 
         self.resize(1.7)
+
+    def unfocus(self, *args):
+        self.textfield["focus"] = 0
+        self.update()
 
     def disable(self):
         self.textfield["state"] = DGG.DISABLED
@@ -60,7 +64,8 @@ class TextSocket(SocketBase):
         if not self.connected:
             self.textfield["state"] = DGG.NORMAL
 
-    def setValue(self, value):
+    def setValue(self, plug, value):
+        print("SETTING VALUE OF TEXT SOCKET TO", value)
         textAsString = ""
         try:
             textAsString = str(value)
@@ -68,6 +73,7 @@ class TextSocket(SocketBase):
             logging.error("couldn't convert node input value to string")
             return
         self.textfield.enterText(textAsString)
+        SocketBase.setValue(self, plug, value)
 
     def getValue(self):
         return self.textfield.get()
@@ -80,9 +86,9 @@ class TextSocket(SocketBase):
         self.frame["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
         self.text["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
 
-    def setConnected(self, connected):
+    def setConnected(self, connected, plug):
         if connected:
             self.textfield["state"] = DGG.DISABLED
         else:
             self.textfield["state"] = DGG.NORMAL
-        self.connected = connected
+        SocketBase.setConnected(self, connected, plug)

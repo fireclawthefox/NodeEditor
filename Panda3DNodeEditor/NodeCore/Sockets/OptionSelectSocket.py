@@ -60,12 +60,13 @@ class OptionSelectSocket(SocketBase):
         if not self.connected:
             self.optionsfield["state"] = DGG.NORMAL
 
-    def setValue(self, value):
+    def setValue(self, plug, value):
         try:
             self.optionsfield.set(value)
         except:
             logging.error(f"couldn't set the value {value} for the option selection")
             return
+        SocketBase.setValue(self, plug, value)
 
     def getValue(self):
         return self.optionsfield.get()
@@ -78,9 +79,9 @@ class OptionSelectSocket(SocketBase):
         self.frame["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
         self.text["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
 
-    def setConnected(self, connected):
+    def setConnected(self, connected, plug):
         if connected:
             self.optionsfield["state"] = DGG.DISABLED
         else:
             self.optionsfield["state"] = DGG.NORMAL
-        self.connected = connected
+        SocketBase.setConnected(self, connected, plug)

@@ -276,7 +276,10 @@
                 "isRoot":true
             },
             "out":[
-                "Next"
+                {
+                    "name":"Next",
+                    "type":"list"
+                }
             ],
             "in":[]
         },
@@ -440,6 +443,10 @@
             },
             "out":[],
             "in":[
+                {
+                    "name":"Call",
+                    "type":"In"
+                },
                 {
                     "name":"Name",
                     "type":"text"

@@ -8,61 +8,111 @@ from Panda3DNodeEditor.NodeCore.Sockets.SocketBase import SocketBase, INSOCKET
 from direct.gui.DirectFrame import DirectFrame
 from direct.gui.DirectLabel import DirectLabel
 from direct.gui.DirectEntry import DirectEntry
+from direct.gui.DirectButton import DirectButton
 from direct.gui import DirectGuiGlobals as DGG
+from DirectGuiExtension import DirectGuiHelper as DGH
 from panda3d.core import TextNode
+from DirectGuiExtension.DirectBoxSizer import DirectBoxSizer
 
 class ListSocket(SocketBase):
     def __init__(self, node, name):
         SocketBase.__init__(self, node, name)
+        self.numEntries = 0
+        self.height = 0.2
 
         self.type = INSOCKET
 
-        self.frame = None
-
         self.frame = DirectFrame(
             frameColor=(0.25, 0.25, 0.25, 1),
-            frameSize=(-1, 0, -self.height, 0),
+            frameSize=(-1, 0, -self.height, 0.2),
             parent=node.frame,
         )
 
-        SocketBase.createPlug(self, self.frame)
+        self.listPlugsHolderFrame = DirectBoxSizer(
+            self.frame,
+            orientation=DGG.VERTICAL,
+            frameColor=(0,0,0,0))
 
         self.text = DirectLabel(
             frameColor=(0, 0, 0, 0),
             frameSize=(0, 1, -self.height, 0),
             scale=(1, 1, 1),
-            text=self.name,
+            text=f"{name} List",
             text_align=TextNode.A_left,
             text_scale=(0.1, 0.1),
-            text_pos=(0.1, -0.02),
+            text_pos=(0.1, 0.035),
             text_fg=(1, 1, 1, 1),
             text_bg=(0, 0, 0, 0),
             parent=self.frame,
         )
 
+        self.btnAddEntry = DirectButton(
+            text="Add",
+            scale=0.1,
+            text_fg=(1, 1, 1, 1),
+            text_bg=(0, 0, 0, 0),
+            frameColor=(0.35, 0.35, 0.35, 1),
+            pos=(0.5, 0, -0.1),
+            parent=self.frame,
+            relief=DGG.FLAT,
+            command=self.addEntry,
+        )
+
+        self.createListSocket()
+
         self.resize(1)
 
-    def setValue(self, value):
-        self.value = value
-        self.checkOthers()
+    def addEntry(self):
+        self.createListSocket()
+
+    def removeEntry(self, plug):
+        plugIDData = plug.plugID.split(":")
+        plugPairID = plugIDData[0]
+
+        hasRemoved = False
+        if plug in self.plugs:
+            self.listPlugsHolderFrame.removeItem(
+                plug.plugWidget,
+                False)
+            plug.removePlug()
+            self.plugs.remove(plug)
+            hasRemoved = True
+
+        if hasRemoved:
+            self.numEntries -= 1
+            self.btnAddEntry.setPos(
+                self.btnAddEntry.getX(),
+                self.btnAddEntry.getY(),
+                self.btnAddEntry.getZ()+0.1)
+            self.updateFrameSize()
+
+    def createListSocket(self):
+        self.createPlug(self.frame, ["listEntry"], removable=True)
+
+        self.listPlugsHolderFrame.addItem(self.plugs[-1].plugWidget)
+
+        self.numEntries += 1
+        self.btnAddEntry.setPos(
+            self.btnAddEntry.getX(),
+            self.btnAddEntry.getY(),
+            self.btnAddEntry.getZ()-0.1)
+        self.updateFrameSize()
+
+    def updateFrameSize(self):
+        self.height = 0.1 * self.numEntries + 0.2
+        self.frame["frameSize"] = (-1, 0, -self.height, 0.2)
+        self.listPlugsHolderFrame.refresh()
+        self.node.update()
+        self.resize(1)
+
+    def setValue(self, plug, value):
+        SocketBase.setValue(self, plug, value)
+        self.value = self.getValue()
 
     def getValue(self):
         value = []
-        for inSocket in self.node.inputList:
-            if inSocket.name == self.name:
-                value.append(self.value)
-        # make sure the last empty entry is not added to the list
-        return value[:-1]
-
-    def checkOthers(self):
-        for inSocket in self.node.inputList[:]:
-            # remove all non-connected sockets with this name
-            if inSocket.name == self.name \
-            and inSocket.value is None:
-                self.node.removeIn(inSocket)
-        # Make sure we always have one new socket to extend the list
-        self.node.addIn(self.name, ListSocket)
-        self.node.update()
+        for plug in self.plugs:
+            value.append(plug.getValue())
 
     def show(self, z, left):
         if self.frame is None:
@@ -73,5 +123,5 @@ class ListSocket(SocketBase):
     def resize(self, newWidth):
         if self.frame is None:
             return
-        self.frame["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
-        self.text["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
+        self.frame["frameSize"] = (0, newWidth, -self.height, 0.1)
+        self.text["frameSize"] = (0, newWidth, -self.height, 0.1)

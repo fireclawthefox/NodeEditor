@@ -24,7 +24,9 @@ class NodeManager:
 
         # Socket connection Management
         self.connections = []
+        self.startPlug = None
         self.startSocket = None
+        self.endPlug = None
         self.endSocket = None
 
         # Drag and Drop feature
@@ -140,9 +142,9 @@ class NodeManager:
                     self.connections.remove(connector)
                     # Update logic of the disconnected existing socket node
                     if connector.socketA.node is node:
-                        self.updateSocketNodeLogic(connector.socketB)
+                        self.updateSocketNodeLogic(connector.socketB, connector.plugB)
                     else:
-                        self.updateSocketNodeLogic(connector.socketA)
+                        self.updateSocketNodeLogic(connector.socketA, connector.plugA)
             self.nodeList.remove(node)
             node.destroy()
             del node
@@ -225,6 +227,7 @@ class NodeManager:
             for i in range(len(node.outputList)):
                 socketMapping[node.outputList[i]] = newNode.outputList[i]
 
+        #TODO: This needs to be extended to connect plugs, also plugs may need to be created!
         # get connections of to be copied nodes
         for connector in self.connections:
             if connector.socketA.node in self.selectedNodes and connector.socketB.node in self.selectedNodes:
@@ -261,48 +264,69 @@ class NodeManager:
     #-------------------------------------------------------------------
     # CONNECTION MANAGEMENT
     #-------------------------------------------------------------------
-    def setStartPlug(self, socket):
+    def setStartPlug(self, plug):
         """Set the start socket for a possible connection"""
-        self.startSocket = socket
+        print("SET START!", plug)
+        self.startPlug = plug
+        self.startSocket = plug.socket
 
-    def setEndPlug(self, socket):
+    def setEndPlug(self, plug):
         """Set the end socket for a possible connection"""
-        self.endSocket = socket
+        print("SET END!", plug)
+        self.endPlug = plug
+        self.endSocket = plug.socket
 
     def cancelPlug(self):
         """A possible connection between two sockets has been canceled"""
+        self.startPlug = None
         self.startSocket = None
+        self.endPlug = None
         self.endSocket = None
 
-    def connectPlugs(self, startSocket=None, endSocket=None):
+    def disconnectPlug(self, plug):
+        for connector in self.connections[:]:
+            if connector.hasPlug(plug):
+                connector.disconnect()
+                self.connections.remove(connector)
+
+                # Update logic of the sockets' nodes
+                self.updateDisconnectedNodesLogic(self.startPlug, self.endPlug)
+                base.messenger.send("NodeEditor_set_dirty")
+                return
+
+    def connectPlugs(self, startPlug=None, endPlug=None):
         """Create a line connection between the sockets set in
-        self.startSocket and self.endSocket if a connection is possible
+        self.startSocket and self.endPlug if a connection is possible
 
         This function will not allow a connection with only one socket
         set, if both sockets are of the same type or on the same node."""
 
-        if startSocket is not None:
-            self.startSocket = startSocket
-        if endSocket is not None:
-            self.endSocket = endSocket
+        if startPlug is not None:
+            self.startPlug = startPlug
+            self.startSocket = startPlug.socket
+        if endPlug is not None:
+            self.endPlug = endPlug
+            self.endSocket = endPlug.socket
 
         # only do something if we actually have two sockets
-        if self.startSocket is None or self.endSocket is None:
+        if self.startPlug is None or self.endPlug is None:
             return
 
         # check if the "IN" socket has no connections otherwise we can't connect
-        if (self.startSocket.type == INSOCKET and self.startSocket.connected) \
-        or (self.endSocket.type == INSOCKET and self.endSocket.connected):
+        if (self.startSocket.type == INSOCKET and self.startPlug.connected) \
+        or (self.endSocket.type == INSOCKET and self.endPlug.connected):
             # check if this is our connection. If so, we want to disconnect
             for connector in self.connections[:]:
-                if connector.connects(self.startSocket, self.endSocket):
+                if connector.connectsPlugs(self.startPlug, self.endPlug):
                     connector.disconnect()
                     self.connections.remove(connector)
 
                     # Update logic of the sockets' nodes
-                    self.updateDisconnectedNodesLogic(self.startSocket, self.endSocket)
+                    self.updateDisconnectedNodesLogic(self.startPlug, self.endPlug)
 
+                    self.startPlug = None
                     self.startSocket = None
+                    self.endPlug = None
                     self.endSocket = None
                     base.messenger.send("NodeEditor_set_dirty")
                     return
@@ -315,13 +339,15 @@ class NodeManager:
         # The same applies to "IN" type sockets
         if self.startSocket.node is not self.endSocket.node \
         and self.startSocket.type != self.endSocket.type:
-            connector = NodeConnector(self.startSocket, self.endSocket)
+            connector = NodeConnector(self.startPlug, self.endPlug)
             self.connections.append(connector)
-            self.startSocket.setConnected(True)
-            self.endSocket.setConnected(True)
+            self.startSocket.setConnected(True, self.startPlug)
+            self.endSocket.setConnected(True, self.endPlug)
             outSocketNode = self.startSocket.node if self.startSocket.type is OUTSOCKET else self.endSocket.node
             self.updateConnectedNodes(outSocketNode)
+            self.startPlug = None
             self.startSocket = None
+            self.endPlug = None
             self.endSocket = None
             base.messenger.send("NodeEditor_set_dirty")
             return connector
@@ -344,28 +370,31 @@ class NodeManager:
             leave.logic()
             self.updateConnectedNodes(leave)
 
-    def updateDisconnectedNodesLogic(self, socketA, socketB):
+    def updateDisconnectedNodesLogic(self, plugA, plugB):
         """
         Updates the logic of the nodes of socket A and socket B.
         The respective input plug type sockets value will be set to None.
         """
         # Update logic of out socket node
-        outSocketNode = socketA.node if socketA.type is OUTSOCKET else socketB.node
+        outSocketNode = plugA.socket.node if plugA.socket.type is OUTSOCKET else plugB.socket.node
         outSocketNode.logic()
         self.updateConnectedNodes(outSocketNode)
 
         # Update logic of in socket node
-        inSocketNode = socketA.node if socketA.type is INSOCKET else socketB.node
-        inSocket = socketA if socketA.type is INSOCKET else socketB
-        inSocket.setValue(None)
+        inSocketNode = plugA.socket.node if plugA.socket.type is INSOCKET else plugB.socket.node
+        inPlug = plugA if plugA.socket.type is INSOCKET else plugB
+        print(inPlug.socket)
+        print("CALL setValue of SOCKET?")
+        inPlug.socket.setValue(inPlug, None)
         inSocketNode.logic()
         self.updateConnectedNodes(inSocketNode)
 
-    def updateSocketNodeLogic(self, socket):
+    def updateSocketNodeLogic(self, socket, plug):
         """Update the logic of the given node and all nodes connected
         down the given"""
+        print("UPDATE LOGIC")
         if socket.type is INSOCKET:
-            socket.setValue(None)
+            plug.setValue(None)
         socket.node.logic()
         self.updateConnectedNodes(socket.node)
 
@@ -377,23 +406,37 @@ class NodeManager:
     def __updateConnectedNodes(self, leaveNode):
         """Update logic of all nodes connected the leave nodes
         out sockets recursively down to the last connected node."""
+        print("Update leave node")
         for connector in self.connections:
             for outSocket in leaveNode.outputList:
                 outSock = None
+                outPlug = None
                 inSock = None
+                inPlug = None
 
                 if connector.socketA is outSocket:
                     inSock = connector.socketB
+                    inPlug = connector.plugB
                     outSock = connector.socketA
+                    outPlug = connector.plugA
                 elif connector.socketB is outSocket:
                     inSock = connector.socketA
+                    inPlug = connector.plugA
                     outSock = connector.socketB
+                    outPlug = connector.plugB
                 else:
                     continue
 
                 connector.setChecked()
                 outSock.node.logic()
-                inSock.setValue(outSock.getValue())
+                print("SETTING VALUE OF PLUG NOE!")
+                print("out", outSock.getValue())
+                print("in", inSock.getValue())
+                print("out sock:", outSock)
+                print("in sock:", inSock)
+                print("out plug:", outPlug)
+                print("in plug:", inPlug)
+                inSock.setValue(inPlug, outSock.getValue())
                 inSock.node.logic()
 
                 if connector in self.processedConnections:
@@ -507,6 +550,9 @@ class NodeManager:
         #astString = ast.dump(ast.parse("def myFunc(a, /, b, c:d, e=f, *g, **h):\n\tprint('Test')"))
         astString = self.getASTEval()
         print(astString)
+        if astString is None:
+            logging.error("No Entry Node found!")
+            return
         astTree = eval(astString)
         print(astString)
         print(astTree)
@@ -521,6 +567,8 @@ class NodeManager:
 
     def replacePlaceholders(self, node, text):
         self.visitedNodes.append(node)
+        print("PLACEHOLDERS ON NODE: ", node)
+        print("MY TEXT: ", text)
         for socket in node.inputList:
             placeholderTypes = ["arguments:", "*", "?"]
             placeholders = [f"{socket.name}"]
@@ -529,6 +577,9 @@ class NodeManager:
                     placeholders.append(f"{pt}{placeholder}")
             for i in range(len(placeholders)):
                 placeholders[i] = f"{{{placeholders[i]}}}"
+
+            print("SOCKET: ", socket.name)
+            print(placeholders)
 
             socketValue = socket.getValue()
             replText = str(socketValue)
@@ -572,6 +623,7 @@ class NodeManager:
                             strValues.append(str(value))
                     replText = ",".join(strValues)
 
+                print("Replacing '", placeholder, "' with '", replText, "'")
                 text = text.replace(placeholder, replText)
                 break
 

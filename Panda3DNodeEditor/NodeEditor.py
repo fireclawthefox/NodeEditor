@@ -259,6 +259,7 @@ class NodeEditor(DirectObject):
         self.accept("startPlug", self.nodeMgr.setStartPlug)
         self.accept("endPlug", self.nodeMgr.setEndPlug)
         self.accept("connectPlugs", self.nodeMgr.connectPlugs)
+        self.accept("disconnectPlug", self.nodeMgr.disconnectPlug)
         self.accept("cancelPlug", self.nodeMgr.cancelPlug)
         # Draw line while connecting sockets
         self.accept("startLineDrawing", self.startLineDrawing)

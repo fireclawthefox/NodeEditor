@@ -17,6 +17,7 @@ class SocketBase:
         self.socketID = uuid4()
         self.node = node
         self.name = name
+        print("MY NAME:", self.name)
         self.height = 0.2
         self.type = None
         self.value = None
@@ -44,16 +45,24 @@ class SocketBase:
         """Returns a string serializable value stored in this node"""
         return self.value
 
-    def setValue(self, value):
+    def setValue(self, plug, value):
+        plug.setValue(value)
         self.value = value
+        self.update()
 
     def hasCustomValue(self):
         """Returns True if the value on this socket is set through the
         socket itself and not through another node"""
         return self.connected == False and self.value is not None
 
-    def createPlug(self, parent):
-        self.plugs.append(SocketPlug(parent))
+    def createPlug(self, parent, prefixes=[], idOverwrite=None, removable=False):
+        self.plugs.append(
+            SocketPlug(self, parent, prefixes, idOverwrite, removable))
+
+    def removeEntry(self, plug):
+        if plug in self.plugs:
+            plug.removePlug()
+            self.plugs.remove(plug)
 
     def updateConnectedNodes(self, *args):
         base.messenger.send("updateConnectedNodes", [self.node])
@@ -61,3 +70,12 @@ class SocketBase:
     def setConnected(self, connected, plug):
         self.connected = connected
         plug.setConnected(connected)
+
+    def update(self):
+        """Call the nodes logic and update connections once this socket
+        gets updated"""
+        # update our nodes logic
+        self.node.logic()
+
+        # update connections
+        self.updateConnectedNodes()

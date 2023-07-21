@@ -19,6 +19,8 @@ from Panda3DNodeEditor.NodeCore.Sockets.TextSocket import TextSocket
 from Panda3DNodeEditor.NodeCore.Sockets.ArgumentsSocket import ArgumentsSocket
 from Panda3DNodeEditor.NodeCore.Sockets.ListSocket import ListSocket
 from Panda3DNodeEditor.NodeCore.Sockets.DictionarySocket import DictionarySocket
+from Panda3DNodeEditor.NodeCore.Sockets.OutSocket import OutSocket
+from Panda3DNodeEditor.NodeCore.Sockets.OutListSocket import OutListSocket
 
 @dataclass
 class NodeMetadata:
@@ -132,7 +134,13 @@ class NodeJSONLoader():
                 nodeMeta.node.customAttributes = definition["extraAttr"]
 
             for outSocket in definition["out"]:
-                nodeMeta.node.addOut(outSocket)
+                if type(outSocket) == dict:
+                    # out socket type
+                    ost = outSocket["type"]
+                    if ost == "list":
+                        nodeMeta.node.addOut(outSocket["name"], OutListSocket)
+                else:
+                    nodeMeta.node.addOut(outSocket, OutSocket)
 
             for inSocket in definition["in"]:
                 st = inSocket["type"].lower()

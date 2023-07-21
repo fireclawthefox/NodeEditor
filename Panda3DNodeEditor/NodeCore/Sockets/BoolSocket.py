@@ -36,11 +36,12 @@ class BoolSocket(SocketBase):
 
         self.resize(1)
 
-    def setValue(self, value):
+    def setValue(self, plug, value):
         if isinstance(value, str):
             value = True if value.lower() in ["1", "true", "#t"] else False
         self.checkbox["indicatorValue"] = value
         self.checkbox.setIndicatorValue()
+        SocketBase.setValue(self, plug, value)
 
     def getValue(self):
         return self.checkbox["indicatorValue"]
@@ -53,12 +54,12 @@ class BoolSocket(SocketBase):
         self.frame["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
         #self.text["frameSize"] = (0, newWidth, -self.height/2, self.height/2)
 
-    def setConnected(self, connected):
+    def setConnected(self, connected, plug):
         if connected:
             self.checkbox["state"] = DGG.DISABLED
         else:
             self.checkbox["state"] = DGG.NORMAL
-        self.connected = connected
+        SocketBase.setConnected(self, connected, plug)
 
     def getAst(self):
         #THIS MAY NOT WORK SINCE WE DON'T HAVE THE CONNECTION

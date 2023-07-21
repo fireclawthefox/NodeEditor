@@ -32,6 +32,8 @@ class JSONTools:
                     "nodeB_ID":str(connector.socketB.node.nodeID),
                     "socketA_ID":str(connector.socketA.socketID),
                     "socketB_ID":str(connector.socketB.socketID),
+                    "plugA_ID":str(connector.plugA.plugID),
+                    "plugB_ID":str(connector.plugB.plugID),
                 }
             )
         return jsonElements
@@ -43,20 +45,25 @@ class JSONTools:
                 # only store values entered by the user, not by other
                 # sockets as they should be recalculated on load
                 value = socket.getValue()
-                sockets.append({
+                socketDef = {
                     "id":str(socket.socketID),
                     "value":str(value) if value is not None else None,
                     "name":str(socket.name),
                     "socketType":type(socket).__name__,
                     "allowMultiConnect":socket.allowMultiConnect,
                     "extraArgs":socket.extraArgs
-                })
+                }
             else:
-                sockets.append({
+                socketDef = {
                     "id":str(socket.socketID),
                     "name":str(socket.name),
                     "socketType":type(socket).__name__,
                     "allowMultiConnect":socket.allowMultiConnect,
                     "extraArgs":socket.extraArgs
-                })
+                }
+            socketDef["plugs"] = []
+            for plug in socket.plugs:
+                plugDef = {"id":plug.plugID}
+                socketDef["plugs"].append(plugDef)
+            sockets.append(socketDef)
         return sockets

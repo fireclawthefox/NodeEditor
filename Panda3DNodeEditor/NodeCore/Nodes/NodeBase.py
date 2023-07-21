@@ -89,9 +89,11 @@ class NodeBase(DirectObject):
             if socket.name == name and type(socket) == socketType:
                 self.removeIn(socket)
 
-    def addOut(self, name):
+    def addOut(self, name, socketType=None):
         """Add a new output socket"""
-        outSocket = OutSocket(self, name)
+        if not socketType:
+            socketType = OutSocket
+        outSocket = socketType(self, name)
         self.outputList.append(outSocket)
 
     def removeOut(self, socket):
@@ -136,11 +138,14 @@ class NodeBase(DirectObject):
         This is a stub and should be overwritten by the derived classes.
         By default it will compile a list of values of all input sockets
         and assigns that to all output sockets"""
+        print("UPDATE NODE LOGIC!")
         value = []
         for inSocket in self.inputList:
             value.append(inSocket.getValue())
+        print("GOT VALUES:", value)
         for outSocket in self.outputList:
             outSocket.setValue(value)
+            outSocket.plugs[0].setValue(value)
 
     def update(self):
         """Show all sockets and resize the frame to fit all sockets in"""

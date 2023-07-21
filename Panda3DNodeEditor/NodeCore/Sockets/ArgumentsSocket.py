@@ -47,10 +47,12 @@ class ArgumentsSocket(SocketBase):
 
         self.resize(1)
 
-    def setValue(self, value):
+    def setValue(self, plug, value):
         if self.value is not None:
             for socketName in self.value:
                 self.node.removeOutByName(socketName)
+
+        SocketBase.setValue(self, plug, value)
 
         if type(value) is list:
             self.value = value
