@@ -69,11 +69,15 @@ class Load:
                         inSocket["extraArgs"])
                 curSocket = node.inputList[i]
                 # create sockets' plugs and set their IDs
-                for plugIdx in range(inSocket["plugs"]):
+                plugIdx = 0
+                for plugDef in inSocket["plugs"]:
+                    print(plugDef)
+                    plugId = plugDef["id"]
                     if plugIdx >= len(curSocket.plugs):
                         # we need to add a plug
                         curSocket.createPlug(curSocket.frame)
                     curSocket.plugs[plugIdx].plugID = inSocket["plugs"][plugIdx]["id"]
+                    plugIdx += 1
                 # set the sockets value if it has any
                 if "value" in inSocket:
                     curSocket.setValue(inSocket["value"])

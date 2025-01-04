@@ -233,7 +233,7 @@ class NodeEditor(DirectObject):
         self.accept("f3", self.searchBox.show)
         # Remove nodes
         self.accept("NodeEditor_removeNode", self.nodeMgr.removeNode)
-        self.accept("x", self.nodeMgr.removeNode)
+        self.accept("ctrl-x", self.nodeMgr.removeNode)
         self.accept("delete", self.nodeMgr.removeNode)
         # Selecting
         self.accept("selectNode", self.nodeMgr.selectNode)
@@ -247,14 +247,13 @@ class NodeEditor(DirectObject):
         self.accept("shift-d", self.nodeMgr.copyNodes)
         self.accept("NodeEditor_copyNodes", self.nodeMgr.copyNodes)
         # Refresh node logics
-        self.accept("ctlr-r", self.nodeMgr.updateAllLeaveNodes)
-        self.accept("NodeEditor_refreshNodes", self.nodeMgr.updateAllLeaveNodes)
-        self.accept("NodeEditor_run_logic", self.nodeMgr.run_logic)
+        #self.accept("ctlr-r", self.nodeMgr.updateAllLeaveNodes)
+        #self.accept("NodeEditor_refreshNodes", self.nodeMgr.updateAllLeaveNodes)
+        #self.accept("NodeEditor_run_logic", self.nodeMgr.run_logic)
 
         #
         # SOCKET RELATED EVENTS
         #
-        self.accept("updateConnectedNodes", self.nodeMgr.updateConnectedNodes)
         # Socket connection with drag and drop
         self.accept("startPlug", self.nodeMgr.setStartPlug)
         self.accept("endPlug", self.nodeMgr.setEndPlug)
@@ -268,7 +267,7 @@ class NodeEditor(DirectObject):
         #
         # CONNECTION RELATED EVENTS
         #
-        self.accept("NodeEditor_updateConnections", self.nodeMgr.updateConnections)
+        #self.accept("NodeEditor_updateConnections", self.nodeMgr.updateConnections)
 
         #
         # PROJECT MANAGEMENT

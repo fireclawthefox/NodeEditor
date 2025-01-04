@@ -17,7 +17,6 @@ class SocketBase:
         self.socketID = uuid4()
         self.node = node
         self.name = name
-        print("MY NAME:", self.name)
         self.height = 0.2
         self.type = None
         self.value = None
@@ -64,9 +63,6 @@ class SocketBase:
             plug.removePlug()
             self.plugs.remove(plug)
 
-    def updateConnectedNodes(self, *args):
-        base.messenger.send("updateConnectedNodes", [self.node])
-
     def setConnected(self, connected, plug):
         self.connected = connected
         plug.setConnected(connected)
@@ -76,6 +72,3 @@ class SocketBase:
         gets updated"""
         # update our nodes logic
         self.node.logic()
-
-        # update connections
-        self.updateConnectedNodes()

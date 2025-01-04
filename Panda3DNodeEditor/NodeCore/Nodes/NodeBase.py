@@ -134,18 +134,8 @@ class NodeBase(DirectObject):
         self.setColor()
 
     def logic(self):
-        """Run the logic of this node, process all in and output data.
-        This is a stub and should be overwritten by the derived classes.
-        By default it will compile a list of values of all input sockets
-        and assigns that to all output sockets"""
-        print("UPDATE NODE LOGIC!")
-        value = []
-        for inSocket in self.inputList:
-            value.append(inSocket.getValue())
-        print("GOT VALUES:", value)
-        for outSocket in self.outputList:
-            outSocket.setValue(value)
-            outSocket.plugs[0].setValue(value)
+        """Send a message that the logic should be updated"""
+        base.messenger.send("NodeEditor_update_logic")
 
     def update(self):
         """Show all sockets and resize the frame to fit all sockets in"""

@@ -65,7 +65,6 @@ class TextSocket(SocketBase):
             self.textfield["state"] = DGG.NORMAL
 
     def setValue(self, plug, value):
-        print("SETTING VALUE OF TEXT SOCKET TO", value)
         textAsString = ""
         try:
             textAsString = str(value)
@@ -89,6 +88,8 @@ class TextSocket(SocketBase):
     def setConnected(self, connected, plug):
         if connected:
             self.textfield["state"] = DGG.DISABLED
+            self.textfield.hide()
         else:
             self.textfield["state"] = DGG.NORMAL
+            self.textfield.show()
         SocketBase.setConnected(self, connected, plug)

@@ -1,0 +1,10 @@
+{
+    "id":"NODE_ID",
+    "in":{
+        "In_Socket_name_1":"Type",
+        "In_Socket_name_2":"Type"
+    },
+    "out":{
+        "Out_Socket_name":"Optional_Type"
+    }
+}

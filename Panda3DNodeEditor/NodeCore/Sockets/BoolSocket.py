@@ -31,10 +31,13 @@ class BoolSocket(SocketBase):
             text = name,
             pos=(0.5,0,0),
             scale=.1,
-            command=self.updateConnectedNodes,
+            command=self.onChange,
             parent=self.frame)
 
         self.resize(1)
+
+    def onChange(self, selection):
+        self.update()
 
     def setValue(self, plug, value):
         if isinstance(value, str):

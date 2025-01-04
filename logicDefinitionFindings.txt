@@ -1,0 +1,10 @@
+Notes for implementation
+
+Python Code:
+indentation proves to be difficult
+converting from code to ast is not always possible for all templates.
+e.g. function need an indented body to be present otherwise it can't be converted to an ast object
+
+AST Dump:
+takes up more space and requires to be converted from code or knowledge of how to best implement an ast representation
+how to put placeholders to connect all the nodes?

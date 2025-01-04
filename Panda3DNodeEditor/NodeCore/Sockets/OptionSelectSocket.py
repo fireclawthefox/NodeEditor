@@ -47,11 +47,14 @@ class OptionSelectSocket(SocketBase):
             borderWidth=(0.1,0.1),
             items=options,
             parent=self.frame,
-            command=self.updateConnectedNodes,
+            command=self.onChange,
             state=DGG.DISABLED)
         self.optionsfield.setScale(0.1)
 
         self.resize(1.7)
+
+    def onChange(self, selection):
+        self.update()
 
     def disable(self):
         self.optionsfield["state"] = DGG.DISABLED

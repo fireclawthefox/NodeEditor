@@ -49,8 +49,8 @@ class NumericSocket(SocketBase):
             valueEntry_text_align=TextNode.ACenter,
             borderWidth=(0.1,0.1),
             parent=self.frame,
-            incButtonCallback=self.updateConnectedNodes,
-            decButtonCallback=self.updateConnectedNodes,)
+            incButtonCallback=self.update,
+            decButtonCallback=self.update,)
         self.spinBox.setScale(0.1)
 
         self.resize(1)

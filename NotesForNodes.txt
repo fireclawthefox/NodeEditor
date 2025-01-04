@@ -1,0 +1,28 @@
+Notes for Nodes
+
+Every node editor scene is a module (until we have container nodes)
+Every node should have a next out and next In to define the call order
+Nodes should contain their AST definition
+
+We have X in and one return node
+-> Class in
+-> FunctionDef in
+-> AsyncFunctionDef in
+everything between the in and return is parsed as one code-block
+
+Imports should be added automatically
+
+How do we handle input/output sockets
+-> Nodes should return the AST that will directly be used at the location they are used in the connected node
+-> For more complex nodes, add a function to get body ast and return value AST
+    -> Return value ast should be the default if the Node has out connections
+
+Should we have a node for compiling lists (N in and one list out)
+
+
+What do we need for representation in general:
+
++ Input Sockets
++ Output Sockets
++ Extendable In-/Output
++

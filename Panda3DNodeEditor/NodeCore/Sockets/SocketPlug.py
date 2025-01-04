@@ -19,9 +19,10 @@ class SocketPlug():
             image="icons/Plug.png",
             image_scale=.05,
             frameColor=(0, 0, 0, 0),
-            frameSize=(-0.05, 0.05, -0.05, 0.05),
+            frameSize=(-0.07, 0.07, -0.07, 0.07),
             parent=parent,
         )
+        self.plugWidget.resetFrameSize()
         self.btnRemovePlug = None
         if removable:
             self.btnRemovePlug = DirectButton(
@@ -51,6 +52,9 @@ class SocketPlug():
     def setValue(self, value):
         self.value = value
         self.socket.update()
+
+    def getValue(self):
+        return self.value
 
     def setupBind(self):
         self.plugWidget.bind(DGG.B1PRESS, self.startPlug)

@@ -58,10 +58,6 @@ class ListSocket(SocketBase):
             command=self.addEntry,
         )
 
-        self.createListSocket()
-
-        self.resize(1)
-
     def addEntry(self):
         self.createListSocket()
 
@@ -80,26 +76,23 @@ class ListSocket(SocketBase):
 
         if hasRemoved:
             self.numEntries -= 1
-            self.btnAddEntry.setPos(
-                self.btnAddEntry.getX(),
-                self.btnAddEntry.getY(),
-                self.btnAddEntry.getZ()+0.1)
+            self.btnAddEntry.setZ(self.btnAddEntry.getZ()+0.14)
             self.updateFrameSize()
 
     def createListSocket(self):
         self.createPlug(self.frame, ["listEntry"], removable=True)
 
-        self.listPlugsHolderFrame.addItem(self.plugs[-1].plugWidget)
+        #TODO: Why does adding the plug to the box sizer break the first new plug after a plug has been added and removed again? But sometimes only if the node has been moved before the first new plug has been added.
+        self.listPlugsHolderFrame.addItem(
+            self.plugs[-1].plugWidget,
+            skipRefresh=True)
 
         self.numEntries += 1
-        self.btnAddEntry.setPos(
-            self.btnAddEntry.getX(),
-            self.btnAddEntry.getY(),
-            self.btnAddEntry.getZ()-0.1)
+        self.btnAddEntry.setZ(self.btnAddEntry.getZ()-0.14)
         self.updateFrameSize()
 
     def updateFrameSize(self):
-        self.height = 0.1 * self.numEntries + 0.2
+        self.height = 0.14 * self.numEntries + 0.2
         self.frame["frameSize"] = (-1, 0, -self.height, 0.2)
         self.listPlugsHolderFrame.refresh()
         self.node.update()
